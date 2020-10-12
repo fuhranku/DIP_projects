@@ -1,7 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <glad/glad.h> // Glad has to be include before glfw
-// GLFW
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
@@ -10,27 +9,18 @@
 #include <opencv2/opencv.hpp>
 #include <IMGUI/imgui.hpp>
 #include <opencv2/highgui/highgui.hpp>
-
 #include "Shader.h"
 
-// Window current width
-unsigned int windowWidth = 800;
-// Window current height
-unsigned int windowHeight = 600;
-// Window title
-const char *windowTitle = "Basic Demo";
-// Window pointer
-GLFWwindow *window;
 
-// Shader object
-Shader *shader;
-// Index (GPU) of the geometry buffer
-unsigned int VBO;
-// Index (GPU) vertex array object
-unsigned int VAO;
-// Index (GPU) of the texture
-unsigned int textureID;
-
+unsigned int windowWidth = 800; // Window current width
+unsigned int windowHeight = 600; // Window current height
+const char *windowTitle = "Basic Demo"; // Window title
+GLFWwindow *window; // Window pointer
+Shader *shader; // Shader object
+unsigned int VBO; // Index (GPU) of the geometry buffer
+unsigned int VAO; // Index (GPU) vertex array object
+unsigned int textureID; // Index (GPU) of the texture
+ 
 /**
  * Handles the window resize
  * @param{GLFWwindow} window pointer
@@ -286,10 +276,10 @@ void update()
  * */
 int main(int argc, char const *argv[])
 {
-    // Initialize all the app components
+    /* Initialize all the app components
     if (!init())
     {
-        // Something went wrong
+         Something went wrong
         std::cin.ignore();
         return -1;
     }
@@ -298,37 +288,37 @@ int main(int argc, char const *argv[])
               << "        Press Escape to close the program            " << std::endl
               << "=====================================================" << std::endl;
 
-    // Starts the app main loop
+     Starts the app main loop
     update();
 
-    // Deletes the texture from the gpu
+     Deletes the texture from the gpu
     glDeleteTextures(1, &textureID);
-    // Deletes the vertex array from the GPU
+     Deletes the vertex array from the GPU
     glDeleteVertexArrays(1, &VAO);
-    // Deletes the vertex object from the GPU
+     Deletes the vertex object from the GPU
     glDeleteBuffers(1, &VBO);
-    // Destroy the shader
+     Destroy the shader
     delete shader;
 
-    // Stops the glfw program
+     Stops the glfw program
     glfwTerminate();
 
-    return 0;
+    return 0;*/
    
-    //cv::Mat img = cv::imread("../avatar_cat.jfif");
-    //cv::Mat output_img;
+    cv::Mat img = cv::imread("../avatar_cat.jfif");
+    cv::Mat output_img;
 
-    //cv::Sobel(img, output_img, CV_16S, 1, 0);
+    cv::Sobel(img, output_img, CV_16S, 1, 0);
 
-    //if (img.empty())
-    //{
+    if (img.empty())
+    {
 
-    //    std::cout << "Couldn't load image";
-    //    __debugbreak();
-    //}
+        std::cout << "Couldn't load image";
+        __debugbreak();
+    }
 
 
-    //cv::imwrite("../out.jpg", output_img);
+    cv::imwrite("../out.jpg", output_img);
 
     //return 0;
 }
