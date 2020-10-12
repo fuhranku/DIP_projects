@@ -10,6 +10,7 @@
 #include <IMGUI/imgui.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include "Shader.h"
+#include "userInterface.h"
 
 
 unsigned int windowWidth = 800; // Window current width
@@ -20,6 +21,7 @@ Shader *shader; // Shader object
 unsigned int VBO; // Index (GPU) of the geometry buffer
 unsigned int VAO; // Index (GPU) vertex array object
 unsigned int textureID; // Index (GPU) of the texture
+UI ui;
  
 /**
  * Handles the window resize
@@ -198,6 +200,9 @@ bool init()
     if (!initWindow() || !initGlad())
         return false;
 
+    // Init user interface
+    ui.init(window);
+
     // Initialize the opengl context
     initGL();
 
@@ -247,6 +252,8 @@ void render()
     // Renders the triangle gemotry
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindVertexArray(0);
+
+    ui.draw();
     // Swap the buffer
     glfwSwapBuffers(window);
 }
@@ -276,10 +283,10 @@ void update()
  * */
 int main(int argc, char const *argv[])
 {
-    /* Initialize all the app components
+    // Initialize all the app components
     if (!init())
     {
-         Something went wrong
+        // Something went wrong
         std::cin.ignore();
         return -1;
     }
@@ -288,37 +295,39 @@ int main(int argc, char const *argv[])
               << "        Press Escape to close the program            " << std::endl
               << "=====================================================" << std::endl;
 
-     Starts the app main loop
+    // Starts the app main loop
     update();
 
-     Deletes the texture from the gpu
+    // Deletes the texture from the gpu
     glDeleteTextures(1, &textureID);
-     Deletes the vertex array from the GPU
+    // Deletes the vertex array from the GPU
     glDeleteVertexArrays(1, &VAO);
-     Deletes the vertex object from the GPU
+    // Deletes the vertex object from the GPU
     glDeleteBuffers(1, &VBO);
-     Destroy the shader
+    // Destroy the shader
     delete shader;
 
-     Stops the glfw program
+    ui.terminate();
+
+    // Stops the glfw program
     glfwTerminate();
 
-    return 0;*/
+    return 0;
    
-    cv::Mat img = cv::imread("../avatar_cat.jfif");
-    cv::Mat output_img;
+    //cv::Mat img = cv::imread("../avatar_cat.jfif");
+    //cv::Mat output_img;
 
-    cv::Sobel(img, output_img, CV_16S, 1, 0);
+    //cv::Sobel(img, output_img, CV_16S, 1, 0);
 
-    if (img.empty())
-    {
+    //if (img.empty())
+    //{
 
-        std::cout << "Couldn't load image";
-        __debugbreak();
-    }
+    //    std::cout << "Couldn't load image";
+    //    __debugbreak();
+    //}
 
 
-    cv::imwrite("../out.jpg", output_img);
+    //cv::imwrite("../out.jpg", output_img);
 
     //return 0;
 }
