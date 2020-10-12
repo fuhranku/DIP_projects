@@ -25,10 +25,27 @@ class Application {
 	unsigned int textureID; // Index (GPU) of the texture
 	UI ui; // User Interface 
 
+protected:
+	static Application* _application;
+
+
 public:
 	Application();
 	~Application();
 
+	/**
+	 * Singletons should not be cloneable.
+	 */
+	Application(Application& other) = delete;
+	/**
+	 * Singletons should not be assignable.
+	 */
+	void operator=(const Application&) = delete;
+	/**
+	* Control access
+	**/
+	static Application* GetInstance();
+	
 	void MainLoop();
 	void Render();
 	void Update();

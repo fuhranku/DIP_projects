@@ -1,5 +1,17 @@
 #include "Application.h"
 
+
+Application *Application::GetInstance() {
+    /**
+     * This is a safer way to create an instance. instance = new Singleton is
+     * dangeruous in case two instance threads wants to access at the same time
+     */
+    if (_application == nullptr) {
+        _application = new Application();
+    }
+    return _application;
+}
+
 Application::Application() {
 
     if (Init())

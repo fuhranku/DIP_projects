@@ -1,5 +1,7 @@
 #include "Application.h"
 
+Application *Application::_application = NULL;
+
 /**
  * App starting point
  * @param{int} number of arguments
@@ -8,7 +10,7 @@
  * */
 int main(int argc, char const *argv[])
 {
-    Application *app = new Application();
+    Application *app = Application::GetInstance();
    /*
 
     cv::Mat img = cv::imread("../avatar_cat.jfif");
