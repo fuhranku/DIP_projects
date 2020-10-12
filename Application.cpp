@@ -41,6 +41,9 @@ void Application::Render() {
     // Renders the triangle gemotry
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindVertexArray(0);
+
+    ui.draw();
+
     // Swap the buffer
     glfwSwapBuffers(window);
     
@@ -58,6 +61,9 @@ bool Application::Init() {
 
     // Initialize the opengl context
     InitGL();
+
+    // Init user interface
+    ui.init(window);
 
     // Loads the shader
     shader = new Shader("assets/shaders/basic.vert", "assets/shaders/basic.frag");

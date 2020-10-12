@@ -10,20 +10,21 @@ int main(int argc, char const *argv[])
 {
     Application *app = new Application();
    /*
+
     cv::Mat img = cv::imread("../avatar_cat.jfif");
     cv::Mat output_img;
 
-    cv::Sobel(img, output_img, CV_16S, 1, 0);
+    cv::sobel(img, output_img, cv_16s, 1, 0);
 
     if (img.empty())
     {
 
-        std::cout << "Couldn't load image";
+        std::cout << "couldn't load image";
         __debugbreak();
     }
 
-
-    cv::imwrite("../out.jpg", output_img);*/
-
-    //return 0;
+    cv::imwrite("../out.jpg", output_img);
+    return 0;
+    
+   */
 }

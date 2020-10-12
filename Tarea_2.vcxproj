@@ -135,13 +135,22 @@
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="glad.c" />
+    <ClCompile Include="ImGuizmo.cpp" />
+    <ClCompile Include="imgui\imgui.cpp" />
+    <ClCompile Include="imgui\imgui_demo.cpp" />
+    <ClCompile Include="imgui\imgui_draw.cpp" />
+    <ClCompile Include="imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="stb_image.cpp" />
+    <ClCompile Include="userInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="userInterface.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\basic.frag" />
