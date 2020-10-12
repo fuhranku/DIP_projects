@@ -15,14 +15,14 @@
 
 class Application {
 
-	unsigned int windowWidth = 800; // Window current width
-	unsigned int windowHeight = 600; // Window current height
+	unsigned int windowWidth = 1024; // Window current width
+	unsigned int windowHeight = 768; // Window current height
 	const char* windowTitle = "Tarea PDI"; // Window title
 	GLFWwindow* window; // Window pointer
 	Shader* shader; // Shader object
 	unsigned int VBO; // Index (GPU) of the geometry buffer
 	unsigned int VAO; // Index (GPU) vertex array object
-	unsigned int textureID; // Index (GPU) of the texture
+	unsigned int image; // Index (GPU) of the texture
 	UI ui; // User Interface 
 
 protected:

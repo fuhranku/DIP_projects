@@ -1,11 +1,13 @@
 #version 330 core
 // Vertex color (interpolated/fragment)
-in vec3 vColor;
+in vec2 TexCoords;
 
 // Fragment Color
-out vec4 color;
+out vec4 fragColor;
+
+uniform sampler2D image;
 
 void main()
 {
-    color = vec4(1.0f);
+	fragColor = vec4(vec3(texture(image,TexCoords).rgb),1.0f);
 }
