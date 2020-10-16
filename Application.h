@@ -12,23 +12,36 @@
 #include "userInterface.h"
 #include <opencv2/highgui/highgui.hpp>
 #include "Shader.h"
+#include "Image.h"
+#include "Camera.h"
 
 class Application {
 
-	unsigned int windowWidth = 1024; // Window current width
-	unsigned int windowHeight = 768; // Window current height
+	static unsigned int windowWidth; // Window current width
+	static unsigned int windowHeight; // Window current height
 	const char* windowTitle = "Tarea PDI"; // Window title
+	float deltaTime;
+	float lastTime = 0;
+	float currentTime = 0;
+	float totalTime = 0;
+	int totalFrames = 0;
+	int fps = 0;
 	GLFWwindow* window; // Window pointer
 	Shader* shader; // Shader object
-	unsigned int VBO; // Index (GPU) of the geometry buffer
-	unsigned int VAO; // Index (GPU) vertex array object
-	unsigned int image; // Index (GPU) of the texture
+	Image *image; // Index (GPU) of the texture
 	UI ui; // User Interface 
+	static Camera camera;
 
 protected:
 	static Application* _application;
 
 
+private:
+	static void OnMouseMotion(GLFWwindow* window, double xpos, double ypos);
+	static void OnMouseButton(GLFWwindow* window, int button, int action, int mods);
+	static void OnKeyPress(GLFWwindow* window, int key, int scancode, int action, int mods);
+	void ProcessKeyboardInput(GLFWwindow* window);
+	void CalcDeltaTime();
 public:
 	Application();
 	~Application();
@@ -50,9 +63,7 @@ public:
 	void Render();
 	void Update();
 	void Resize();
-	void BuildGeometry();
 	unsigned int LoadTexture(const char* path);
-	void ProcessKeyboardInput(GLFWwindow* window);
 
 	bool Init();
 	bool InitGlad();

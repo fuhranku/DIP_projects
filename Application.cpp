@@ -1,5 +1,8 @@
 #include "Application.h"
 
+unsigned int Application::windowWidth = 1366;
+unsigned int Application::windowHeight = 768;
+Camera Application::camera(windowWidth, windowHeight);
 
 Application *Application::GetInstance() {
     /**
@@ -24,11 +27,11 @@ Application::Application() {
         Update();
 
         // Deletes the texture from the gpu
-        glDeleteTextures(1, &image);
+        glDeleteTextures(1, &image->id);
         // Deletes the vertex array from the GPU
-        glDeleteVertexArrays(1, &VAO);
+        glDeleteVertexArrays(1, &image->VAO);
         // Deletes the vertex object from the GPU
-        glDeleteBuffers(1, &VBO);
+        glDeleteBuffers(1, &image->VBO);
         // Destroy the shader
         delete shader;
 
@@ -36,6 +39,89 @@ Application::Application() {
         glfwTerminate();
     }
 }
+
+void Application::OnMouseMotion(GLFWwindow* window, double xpos, double ypos)
+{
+    /*glfwSetCursorPos(window, windowWidth / 2.0, windowHeight / 2.0);
+    double xoffset = ((windowWidth / 2.0) - xpos) * camera.mouseSpeed * _application->deltaTime;
+    double yoffset = ((windowHeight / 2.0) - ypos) * camera.mouseSpeed * _application->deltaTime;
+
+    camera.mouseUpdate(glm::vec2(xoffset, yoffset));*/
+}
+
+void Application::OnMouseButton(GLFWwindow* window, int button, int action, int mods) {
+    //placeholder
+}
+
+void Application::OnKeyPress(GLFWwindow* window, int key, int scancode, int action, int mods) {
+
+    
+}
+
+void Application::ProcessKeyboardInput(GLFWwindow* window)
+{
+    float MOVEMENT_SPEED = 10.0f;
+    float speed = MOVEMENT_SPEED * deltaTime;
+    // Checks if the escape key is pressed
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        // Tells glfw to close the window as soon as possible
+        glfwSetWindowShouldClose(window, true);
+
+    // Checks if the r key is pressed
+    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+    {
+        // Reloads the shader
+        delete shader;
+        shader = new Shader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
+    }
+
+    // Move Forward
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        camera.moveForward(deltaTime);
+    }
+    // Move Backward
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        camera.moveBackward(deltaTime);
+    }
+    // Move right
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        camera.moveRight(deltaTime);
+    }
+    // Move left
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        camera.moveLeft(deltaTime);
+    }
+
+    // Move Up
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+        camera.moveUp(deltaTime);
+    }
+
+    // Move Down
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+        camera.moveDown(deltaTime);
+    }
+}
+
+void Application::CalcDeltaTime() {
+    lastTime = currentTime;
+    currentTime = glfwGetTime();
+    deltaTime = currentTime - lastTime;
+
+    totalFrames++;
+
+    if (totalTime > 1) {
+        fps = totalFrames;
+        totalFrames = 0;
+        totalTime = 0;
+
+        return;
+    }
+
+    totalTime += deltaTime;
+}
+
+
 
 /**
 * Render Function
@@ -49,11 +135,14 @@ void Application::Render() {
     // Use the shader
     shader->use();
     shader->setInt("image", 0);
+
+    shader->setMat4("view", camera.viewMatrix);
+    shader->setMat4("projection", camera.getOrthoMatrix());
     // Bind textures into GPU
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, image);
+    glBindTexture(GL_TEXTURE_2D, image->id);
     // Binds the vertex array to be drawn
-    glBindVertexArray(VAO);
+    glBindVertexArray(image->VAO);
     // Renders the triangle gemotry
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
@@ -62,6 +151,9 @@ void Application::Render() {
 
     // Swap the buffer
     glfwSwapBuffers(window);
+
+    //Process Keyboard Input
+    ProcessKeyboardInput(window);
     
 }
 
@@ -83,33 +175,14 @@ bool Application::Init() {
 
     // Loads the shader
     shader = new Shader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
-    // Loads all the geometry into the GPU
-    BuildGeometry();
     // Loads the texture into the GPU
-    image = LoadTexture("assets/textures/bricks2.jpg");
+    image = new Image("assets/textures/imagen.jpg");
+    // Create Plane with Image Resolution
+    image->BuildPlane();
+
+
 
     return true;
-}
-
-/**
-* Process the keyboard input
-* There are ways of implementing this function through callbacks provide by
-* the GLFW API, check the GLFW documentation to find more
-* @param{GLFWwindow} window pointer
-* */
-void Application::ProcessKeyboardInput(GLFWwindow* window) {
-    // Checks if the escape key is pressed
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        // Tells glfw to close the window as soon as possible
-        glfwSetWindowShouldClose(window, true);
-
-    // Checks if the r key is pressed
-    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-    {
-        // Reloads the shader
-        delete shader;
-        shader = new Shader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
-    }
 }
 
 /**
@@ -121,6 +194,9 @@ void Application::Update() {
     {
         // Checks for keyboard inputs
         ProcessKeyboardInput(window);
+
+        // Calculate Delta Time
+        CalcDeltaTime();
 
         // Renders everything
         Render();
@@ -174,6 +250,14 @@ bool Application::InitWindow() {
 
     // Window resize callback
     //glfwSetFramebufferSizeCallback(window, Resize);
+
+    // Mouse position callback
+    glfwSetCursorPosCallback(window, OnMouseMotion);
+    // Mouse buttons callback
+    glfwSetMouseButtonCallback(window, OnMouseButton);
+    // Keyboard buttons callback
+    glfwSetKeyCallback(window, OnKeyPress);
+
     return true;
 }
 
@@ -206,96 +290,5 @@ void Application::InitGL()
     glViewport(0, 0, windowWidth, windowHeight);
     // Sets the clear color
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
-}
-
-
-/**
- * Builds all the geometry buffers and
- * loads them up into the GPU
- * (Builds a simple triangle)
- * */
-void Application::BuildGeometry(){
-    // Quad for debug purposes:
-    float quadVertices[] = {
-        // positions        // Color   		   // texture Coords
-        -1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f,  0.0f, 1.0f,
-        -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
-         1.0f,  1.0f, 0.0f, 0.0f, 0.0f, 1.0f,  1.0f, 1.0f,
-         1.0f, -1.0f, 0.0f, 0.5f, 0.5f, 0.75f, 1.0f, 0.0f,
-    };
-    // Setup plane VAO
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-    // Position
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    // Color
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    // Texture Coords
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-}
-
-
-
-/**
- * Loads a texture into the GPU
- * @param{const char} path of the texture file
- * @returns{unsigned int} GPU texture index
- * */
-unsigned int Application::LoadTexture(const char* path)
-{
-    unsigned int id;
-    // Creates the texture on GPU
-    glGenTextures(1, &id);
-    // Loads the texture
-    int textureWidth, textureHeight, numberOfChannels;
-    // Flips the texture when loads it because in opengl the texture coordinates are flipped
-    stbi_set_flip_vertically_on_load(true);
-    // Loads the texture file data
-    unsigned char* data = stbi_load(path, &textureWidth, &textureHeight, &numberOfChannels, 0);
-    if (data)
-    {
-        // Gets the texture channel format
-        GLenum format;
-        switch (numberOfChannels)
-        {
-        case 1:
-            format = GL_RED;
-            break;
-        case 3:
-            format = GL_RGB;
-            break;
-        case 4:
-            format = GL_RGBA;
-            break;
-        }
-
-        // Binds the texture
-        glBindTexture(GL_TEXTURE_2D, id);
-        // Creates the texture
-        glTexImage2D(GL_TEXTURE_2D, 0, format, textureWidth, textureHeight, 0, format, GL_UNSIGNED_BYTE, data);
-        // Creates the texture mipmaps
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        // Set the filtering parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
-    else
-    {
-        std::cout << "ERROR:: Unable to load texture " << path << std::endl;
-        glDeleteTextures(1, &id);
-    }
-    // We dont need the data texture anymore because is loaded on the GPU
-    stbi_image_free(data);
-
-    return id;
 }
 
