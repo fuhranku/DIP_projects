@@ -146,7 +146,6 @@ void Application::Render() {
     // Renders the triangle gemotry
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
-
     ui.draw();
 
     // Swap the buffer
@@ -176,7 +175,7 @@ bool Application::Init() {
     // Loads the shader
     shader = new Shader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
     // Loads the texture into the GPU
-    image = new Image("assets/textures/imagen.jpg");
+    image = new Image("assets/textures/bricks2.jpg");
     // Create Plane with Image Resolution
     image->BuildPlane();
 
@@ -287,7 +286,7 @@ void Application::InitGL()
     // Enables the z-buffer test
     glEnable(GL_DEPTH_TEST);
     // Sets the ViewPort
-    glViewport(0, 0, windowWidth, windowHeight);
+    glViewport(0, 0, windowWidth-300, windowHeight);
     // Sets the clear color
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 }

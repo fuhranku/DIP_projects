@@ -24,6 +24,14 @@ void UI::draw() {
 
 	showMainMenuBar();
 
+	ImGui::Begin("Options menu",0,ImGuiWindowFlags_NoResize |
+							      ImGuiWindowFlags_NoMove   |
+								  ImGuiWindowFlags_NoCollapse); {
+		ImGui::Text("Negative filter");
+		ImGui::SameLine();
+		ImGui::Button("Apply");
+	}ImGui::End();
+
 	// Render dear imgui into screen
 	ImGui::EndFrame();
 	ImGui::Render();

@@ -15,8 +15,9 @@ public:
     int windowWidth;
     int windowHeight;
     float mouseSpeed;
-    float nearPlane = 1.0f;
-    float farPlane = 1000.0f;
+    float nearPlane = -1.0f;
+    float farPlane = 1.0f;
+    float zoom = 1.0f;
     float yaw, pitch;
     glm::mat4 viewMatrix = glm::mat4(1.0f);
     glm::mat4 orthoMatrix = glm::mat4(1.0f);
