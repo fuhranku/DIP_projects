@@ -6,7 +6,7 @@ class Action
 {
 
 public:
-	Action();
+	Action(unsigned char* imageData, Image image);
 	~Action();
 
 	Image image;

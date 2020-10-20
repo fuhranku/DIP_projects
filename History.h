@@ -5,14 +5,14 @@
 class History
 {
 private:
-	std::stack<Action> actions;
+	std::stack<Action*> actions;
 
 public:
 	History();
 	~History();
 
-	void _do(Action action);
-	Action _undo();
+	void _do(unsigned char* imageData, Image image);
+	Action* _undo();
 
 };
 
