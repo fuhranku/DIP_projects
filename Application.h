@@ -14,6 +14,7 @@
 #include "Shader.h"
 #include "Image.h"
 #include "Camera.h"
+#include "History.h"
 
 class Application {
 
@@ -31,6 +32,7 @@ class Application {
 	Image *image; // Index (GPU) of the texture
 	UI ui; // User Interface 
 	static Camera camera;
+	History history;
 
 protected:
 	static Application* _application;

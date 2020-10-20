@@ -133,9 +133,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Action.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="glad.c" />
+    <ClCompile Include="History.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="ImGuizmo.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
@@ -150,8 +152,10 @@
     <ClCompile Include="userInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Action.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="History.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="userInterface.h" />

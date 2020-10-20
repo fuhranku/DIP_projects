@@ -38,8 +38,14 @@ glm::mat4 Camera::getWorldToViewMatrix() {
 }
 
 glm::mat4 Camera::getOrthoMatrix() {
+<<<<<<< HEAD
 	orthoMatrix = glm::ortho(-windowWidth / 2 - zoom, windowWidth / 2 + zoom, -windowHeight - zoom, windowHeight / 2 + zoom, nearPlane, farPlane);
 	//printf("(%f,%f,%f,%f)\n", -windowWidth / 2 - zoom, windowWidth / 2 + zoom, -windowHeight - zoom, windowHeight / 2 + zoom);
+=======
+	nearPlane = -position.z;
+	farPlane = position.z;
+	orthoMatrix = glm::ortho(-windowWidth / 2 * position.z, windowWidth / 2 * position.z, -windowHeight / 2 * position.z, windowHeight / 2 * position.z, nearPlane, farPlane);
+>>>>>>> 3d6c18e9cba3bf5d4bb500bb6cde740f45bd110f
 	return orthoMatrix;
 }
 
