@@ -16,7 +16,7 @@ Camera::Camera(int windowWidth, int windowHeight) :
 	//glm::mat4 Rotation = glm::yawPitchRoll(glm::radians(yaw), glm::radians(pitch), 0.0f);
 	//viewDirection = glm::vec3(Rotation * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
 	viewMatrix = glm::lookAt(position, position + viewDirection, UP);
-	orthoMatrix = glm::ortho(-windowWidth/2 - position.z, windowWidth / 2 + position.z, -windowHeight / 2 - position.z, windowHeight / 2 + position.z, nearPlane, farPlane);
+	orthoMatrix = glm::ortho(-windowWidth/2 * position.z, windowWidth / 2 * position.z, -windowHeight / 2 * position.z, windowHeight / 2 * position.z, nearPlane, farPlane);
 }
 
 void Camera::mouseUpdate(const glm::vec2& newMousePosition) {
@@ -41,7 +41,7 @@ glm::mat4 Camera::getWorldToViewMatrix() {
 glm::mat4 Camera::getOrthoMatrix() {
 	nearPlane = -position.z;
 	farPlane = position.z;
-	orthoMatrix = glm::ortho(-windowWidth / 2 - position.z, windowWidth / 2 + position.z, -windowHeight / 2 - position.z, windowHeight / 2 + position.z, nearPlane, farPlane);
+	orthoMatrix = glm::ortho(-windowWidth / 2 * position.z, windowWidth / 2 * position.z, -windowHeight / 2 * position.z, windowHeight / 2 * position.z, nearPlane, farPlane);
 	return orthoMatrix;
 }
 
