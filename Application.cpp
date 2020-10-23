@@ -57,8 +57,25 @@ void Application::OnMouseButton(GLFWwindow* window, int button, int action, int 
 }
 
 void Application::OnKeyPress(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    //// Move Forward
+    //if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    //    camera.moveForward(Application::GetInstance()->deltaTime);
+    //}
+    //// Move Backward
+    //if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    //    camera.moveBackward(Application::GetInstance()->deltaTime);
+    //}
+}
 
-    
+void Application::OnMouseScroll(GLFWwindow* window, double posX, double posY) {
+    std::cout << posX << ", " << posY << std::endl;
+
+    if (posY == 1.0f) {
+        camera.moveForward(Application::GetInstance()->deltaTime);
+    }
+    else if(posY == -1.0f){
+        camera.moveBackward(Application::GetInstance()->deltaTime);
+    }
 }
 
 void Application::ProcessKeyboardInput(GLFWwindow* window)
@@ -78,14 +95,6 @@ void Application::ProcessKeyboardInput(GLFWwindow* window)
         shader = new Shader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
     }
 
-    // Move Forward
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        camera.moveForward(deltaTime);
-    }
-    // Move Backward
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        camera.moveBackward(deltaTime);
-    }
     // Move right
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
         camera.moveRight(deltaTime);
@@ -134,6 +143,9 @@ void Application::Render() {
     // Clears the color and depth buffers from the frame buffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     /** Draws code goes here **/
     // Use the shader
     shader->use();
@@ -149,6 +161,10 @@ void Application::Render() {
     // Renders the triangle gemotry
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
+
+
+    drawGrid();
+
     ui.draw();
 
     // Swap the buffer
@@ -157,6 +173,21 @@ void Application::Render() {
     //Process Keyboard Input
     ProcessKeyboardInput(window);
     
+}
+
+void Application::drawGrid() {
+
+    gridShader->use();
+    gridShader->setMat4("model", glm::mat4(1.0f));
+    gridShader->setMat4("view", camera.viewMatrix);
+    gridShader->setMat4("projection", camera.getOrthoMatrix());
+
+    glBindVertexArray(gridVAO);
+
+    glDrawElements(GL_LINES, gridLength, GL_UNSIGNED_INT, NULL);
+
+    glBindVertexArray(0);
+
 }
 
 
@@ -175,14 +206,21 @@ bool Application::Init() {
     // Init user interface
     ui.init(window);
 
-    // Loads the shader
+    
+
+    // Load Image Shader
     shader = new Shader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
+    // Load Grid Shader
+    gridShader = new Shader("assets/shaders/gridShader.vert", "assets/shaders/gridShader.frag");
+
+
     // Loads the texture into the GPU
-    image = new Image("assets/textures/imagen2.jpg");
+    image = new Image("assets/textures/imagen.jpg");
     // Create Plane with Image Resolution
     image->BuildPlane();
 
-
+    // Initialize grid data
+    InitGrid();
 
     return true;
 }
@@ -212,22 +250,19 @@ void Application::InitGrid() {
     std::vector<glm::vec3> vertices;
     std::vector<glm::uvec4> indices;
 
-    //gridModelMatrix = glm::scale(gridModelMatrix, glm::vec3(400.0, 1.0f, 400.0f));
-    int slices = 30;
-
-    for (int j = 0; j <= image->width; ++j) {
-        for (int i = 0; i <= image->height; ++i) {
+    for (int j = -(image->height /2); j <= image->height /2; ++j) {
+        for (int i = -(image->width /2); i <= image->width /2; ++i) {
             float x = (float)i;
             float y = (float)j;
-            vertices.push_back(glm::vec3(x, y, 0));
+            vertices.push_back(glm::vec3(x, y, 0.015));
         }
     }
 
-    for (int j = 0; j < image->width; ++j) {
-        for (int i = 0; i < image->height; ++i) {
+    for (int j = 0; j < image->height; ++j) {
+        for (int i = 0; i < image->width; ++i) {
 
             int row1 = j * (image->width + 1);
-            int row2 = (j + 1) * (image->height + 1);
+            int row2 = (j + 1) * (image->width + 1);
 
             indices.push_back(glm::uvec4(row1 + i, row1 + i + 1, row1 + i + 1, row2 + i + 1));
             indices.push_back(glm::uvec4(row2 + i + 1, row2 + i, row2 + i, row1 + i));
@@ -235,23 +270,23 @@ void Application::InitGrid() {
         }
     }
 
-    //glGenVertexArrays(1, &gridVAO);
-    //glBindVertexArray(gridVAO);
-    //glGenBuffers(1, &gridVBO);
-    //glBindBuffer(GL_ARRAY_BUFFER, gridVBO);
-    //glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
-    //glEnableVertexAttribArray(0);
-    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glGenVertexArrays(1, &gridVAO);
+    glBindVertexArray(gridVAO);
+    glGenBuffers(1, &gridVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, gridVBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    //glGenBuffers(1, &gridIBO);
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gridIBO);
-    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(glm::uvec4), &indices[0], GL_STATIC_DRAW);
+    glGenBuffers(1, &gridIBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gridIBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(glm::uvec4), &indices[0], GL_STATIC_DRAW);
 
-    //glBindVertexArray(0);
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    //glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    //gridLength = (GLuint)indices.size() * 4;
+    gridLength = (GLuint)indices.size() * 4;
 }
 
 /**
@@ -306,6 +341,8 @@ bool Application::InitWindow() {
     glfwSetMouseButtonCallback(window, OnMouseButton);
     // Keyboard buttons callback
     glfwSetKeyCallback(window, OnKeyPress);
+
+    glfwSetScrollCallback(window, OnMouseScroll);
 
     return true;
 }

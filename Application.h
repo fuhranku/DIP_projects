@@ -26,15 +26,19 @@ class Application {
 	int totalFrames = 0;
 	int fps = 0;
 	GLFWwindow* window; // Window pointer
-	Shader* shader; // Shader object
+	Shader *shader, *gridShader; // Shader object
 	UI ui; // User Interface 
 	History history;
+	// GRID
+	unsigned int gridVAO, gridVBO, gridIBO, gridLength;
+
 private:
 	static Application* _application;
 	static void OnMouseMotion(GLFWwindow* window, double xpos, double ypos);
 	static void OnMouseButton(GLFWwindow* window, int button, int action, int mods);
 	static void OnKeyPress(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void Resize(GLFWwindow* window, int width, int height);
+	static void OnMouseScroll(GLFWwindow* window, double posX, double posY);
 	void ProcessKeyboardInput(GLFWwindow* window);
 	void CalcDeltaTime();
 	Application();
@@ -46,6 +50,8 @@ public:
 	static unsigned int windowHeight; // Window current height
 
 	static Application* GetInstance();
+
+	void drawGrid();
 	
 	void MainLoop();
 	void Render();

@@ -2,7 +2,7 @@
 #include <iostream>
 #include "Application.h"
 
-const float MOVEMENT_SPEED = 1.0f;
+const float MOVEMENT_SPEED = 20.0f;
 Application* app2;
 
 Camera::Camera(int windowWidth, int windowHeight) :
@@ -17,7 +17,7 @@ Camera::Camera(int windowWidth, int windowHeight) :
 	//glm::mat4 Rotation = glm::yawPitchRoll(glm::radians(yaw), glm::radians(pitch), 0.0f);
 	//viewDirection = glm::vec3(Rotation * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
 	app2 = Application::GetInstance();
-	panning_zooming_speed = 500;
+	panning_zooming_speed = 25;
 	viewMatrix = glm::lookAt(position, position + viewDirection, UP);
 	orthoMatrix = glm::ortho(-windowWidth / 2 * zoom, windowWidth / 2 * zoom, -windowHeight / 2 * zoom, windowHeight / 2 * zoom, nearPlane, farPlane);
 }
@@ -57,14 +57,16 @@ void Camera::moveForward(float time) {
 
 	float speed = MOVEMENT_SPEED * time;
 	zoom -= speed;
+
+	if (zoom < 0.015f) zoom = 0.015f;
 	std::cout << zoom << std::endl;
-	zoom = zoom < 0 ? 0.000000005 : zoom;
 }
 
 void Camera::moveBackward(float time) {
 	
 	float speed = MOVEMENT_SPEED * time;
 	zoom += speed;
+
 }
 
 void Camera::moveLeft(float time) {
