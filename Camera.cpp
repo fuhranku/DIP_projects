@@ -2,7 +2,7 @@
 #include <iostream>
 #include "Application.h"
 
-const float MOVEMENT_SPEED = 20.0f;
+const float MOVEMENT_SPEED = 10.0f;
 Application* app2;
 
 Camera::Camera(int windowWidth, int windowHeight) :
@@ -17,7 +17,7 @@ Camera::Camera(int windowWidth, int windowHeight) :
 	//glm::mat4 Rotation = glm::yawPitchRoll(glm::radians(yaw), glm::radians(pitch), 0.0f);
 	//viewDirection = glm::vec3(Rotation * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
 	app2 = Application::GetInstance();
-	panning_zooming_speed = 25;
+	panning_zooming_speed = 35;
 	viewMatrix = glm::lookAt(position, position + viewDirection, UP);
 	orthoMatrix = glm::ortho(-windowWidth / 2 * zoom, windowWidth / 2 * zoom, -windowHeight / 2 * zoom, windowHeight / 2 * zoom, nearPlane, farPlane);
 }
@@ -88,14 +88,14 @@ void Camera::moveUp(float time) {
 	float speed = MOVEMENT_SPEED * time;
 	position += speed * UP * (panning_zooming_speed * zoom);
 	viewMatrix = glm::lookAt(position, position + viewDirection, UP);
-	printf("(%f,%f,%f)\n", position.x,position.y,position.z);
+	//printf("(%f,%f,%f)\n", position.x,position.y,position.z);
 }
 
 void Camera::moveDown(float time) {
 	float speed = MOVEMENT_SPEED * time;
 	position -= speed * UP * (panning_zooming_speed * zoom);
 	viewMatrix = glm::lookAt(position, position + viewDirection, UP);
-	printf("(%f,%f,%f)\n", position.x, position.y, position.z);
+	//printf("(%f,%f,%f)\n", position.x, position.y, position.z);
 
 }
 
