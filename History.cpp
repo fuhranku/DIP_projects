@@ -9,7 +9,7 @@ History::~History() {
 
 }
 
-void History::_do(unsigned char *imageData, Image image) {
+void History::_do(unsigned char *imageData, Image* image) {
 	Action* action = new Action(imageData, image);
 	actions.push(action);
 }

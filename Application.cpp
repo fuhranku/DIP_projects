@@ -1,21 +1,23 @@
 #include "Application.h"
-
+Application* Application::_application = NULL;
 unsigned int Application::windowWidth = 1366;
 unsigned int Application::windowHeight = 768;
 Camera Application::camera(windowWidth, windowHeight);
 
-Application *Application::GetInstance() {
-    /**
-     * This is a safer way to create an instance. instance = new Singleton is
-     * dangeruous in case two instance threads wants to access at the same time
-     */
-    if (_application == nullptr) {
+/**
+* Creates an instance of the class
+*
+* @return the instance of this class
+*/
+Application* Application::GetInstance() {
+    if (!_application)   // Only allow one instance of class to be generated.
         _application = new Application();
-    }
     return _application;
 }
 
-Application::Application() {
+Application::Application(){}
+
+void Application::InitInstance() {
 
     if (Init())
     {
@@ -39,6 +41,7 @@ Application::Application() {
         glfwTerminate();
     }
 }
+
 
 void Application::OnMouseMotion(GLFWwindow* window, double xpos, double ypos)
 {
@@ -175,7 +178,7 @@ bool Application::Init() {
     // Loads the shader
     shader = new Shader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
     // Loads the texture into the GPU
-    image = new Image("assets/textures/bricks2.jpg");
+    image = new Image("assets/textures/imagen2.jpg");
     // Create Plane with Image Resolution
     image->BuildPlane();
 
@@ -205,19 +208,66 @@ void Application::Update() {
     }
 }
 
+void Application::InitGrid() {
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::uvec4> indices;
+
+    //gridModelMatrix = glm::scale(gridModelMatrix, glm::vec3(400.0, 1.0f, 400.0f));
+    int slices = 30;
+
+    for (int j = 0; j <= image->width; ++j) {
+        for (int i = 0; i <= image->height; ++i) {
+            float x = (float)i;
+            float y = (float)j;
+            vertices.push_back(glm::vec3(x, y, 0));
+        }
+    }
+
+    for (int j = 0; j < image->width; ++j) {
+        for (int i = 0; i < image->height; ++i) {
+
+            int row1 = j * (image->width + 1);
+            int row2 = (j + 1) * (image->height + 1);
+
+            indices.push_back(glm::uvec4(row1 + i, row1 + i + 1, row1 + i + 1, row2 + i + 1));
+            indices.push_back(glm::uvec4(row2 + i + 1, row2 + i, row2 + i, row1 + i));
+
+        }
+    }
+
+    //glGenVertexArrays(1, &gridVAO);
+    //glBindVertexArray(gridVAO);
+    //glGenBuffers(1, &gridVBO);
+    //glBindBuffer(GL_ARRAY_BUFFER, gridVBO);
+    //glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
+    //glEnableVertexAttribArray(0);
+    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    //glGenBuffers(1, &gridIBO);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gridIBO);
+    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(glm::uvec4), &indices[0], GL_STATIC_DRAW);
+
+    //glBindVertexArray(0);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    //glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    //gridLength = (GLuint)indices.size() * 4;
+}
+
 /**
 * Handles the window resize
 * @param{GLFWwindow} window pointer
 * @param{int} new width of the window
 * @param{int} new height of the window
 * */
-//void Application::Resize(GLFWwindow* window, int width, int height)
-//{
-//    windowWidth = width;
-//    windowHeight = height;
-//    // Sets the OpenGL viewport size and position
-//    glViewport(0, 0, windowWidth, windowHeight);
-//}
+void Application::Resize(GLFWwindow* window, int width, int height)
+{
+    windowWidth = width;
+    windowHeight = height;
+
+    // Sets the OpenGL viewport size and position
+    glViewport(0, 0, windowWidth*0.8f, windowHeight);
+}
 
 
 
@@ -248,7 +298,7 @@ bool Application::InitWindow() {
     glfwMakeContextCurrent(window);
 
     // Window resize callback
-    //glfwSetFramebufferSizeCallback(window, Resize);
+    glfwSetFramebufferSizeCallback(window, Resize);
 
     // Mouse position callback
     glfwSetCursorPosCallback(window, OnMouseMotion);
@@ -286,7 +336,7 @@ void Application::InitGL()
     // Enables the z-buffer test
     glEnable(GL_DEPTH_TEST);
     // Sets the ViewPort
-    glViewport(0, 0, windowWidth-300, windowHeight);
+    glViewport(0, 0, windowWidth*0.8f, windowHeight);
     // Sets the clear color
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 }

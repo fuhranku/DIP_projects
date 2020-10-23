@@ -1,5 +1,8 @@
 #include "userInterface.h"
 #include <ImGuizmo.h>
+#include "Application.h"
+
+Application* app;
 
 UI::UI() {
 }
@@ -12,7 +15,8 @@ bool UI::init(GLFWwindow* window) {
 	ImGui::StyleColorsDark();
 
 	//Get singleton instance;
-	//instance = icarus3D::Instance();
+	app = Application::GetInstance();
+
 	return true;
 }
 
@@ -23,10 +27,12 @@ void UI::draw() {
 	ImGui::NewFrame();
 
 	showMainMenuBar();
-
+	ImGui::SetNextWindowPos(ImVec2(Application::windowWidth * 0.8f,0));
+	ImGui::SetNextWindowSize(ImVec2(Application::windowWidth * 0.2f, Application::windowHeight));
 	ImGui::Begin("Options menu",0,ImGuiWindowFlags_NoResize |
 							      ImGuiWindowFlags_NoMove   |
-								  ImGuiWindowFlags_NoCollapse); {
+								  ImGuiWindowFlags_NoCollapse |
+								  ImGuiWindowFlags_NoSavedSettings); {
 		ImGui::Text("Negative filter");
 		ImGui::SameLine();
 		ImGui::Button("Apply");

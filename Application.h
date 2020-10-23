@@ -18,8 +18,6 @@
 
 class Application {
 
-	static unsigned int windowWidth; // Window current width
-	static unsigned int windowHeight; // Window current height
 	const char* windowTitle = "Tarea PDI"; // Window title
 	float deltaTime;
 	float lastTime = 0;
@@ -29,47 +27,35 @@ class Application {
 	int fps = 0;
 	GLFWwindow* window; // Window pointer
 	Shader* shader; // Shader object
-	Image *image; // Index (GPU) of the texture
 	UI ui; // User Interface 
-	static Camera camera;
 	History history;
-
-protected:
-	static Application* _application;
-
-
 private:
+	static Application* _application;
 	static void OnMouseMotion(GLFWwindow* window, double xpos, double ypos);
 	static void OnMouseButton(GLFWwindow* window, int button, int action, int mods);
 	static void OnKeyPress(GLFWwindow* window, int key, int scancode, int action, int mods);
+	static void Resize(GLFWwindow* window, int width, int height);
 	void ProcessKeyboardInput(GLFWwindow* window);
 	void CalcDeltaTime();
-public:
 	Application();
 	~Application();
+public:
+	Image *image; // Index (GPU) of the texture
+	static Camera camera;
+	static unsigned int windowWidth; // Window current width
+	static unsigned int windowHeight; // Window current height
 
-	/**
-	 * Singletons should not be cloneable.
-	 */
-	Application(Application& other) = delete;
-	/**
-	 * Singletons should not be assignable.
-	 */
-	void operator=(const Application&) = delete;
-	/**
-	* Control access
-	**/
 	static Application* GetInstance();
 	
 	void MainLoop();
 	void Render();
 	void Update();
-	void Resize();
 	unsigned int LoadTexture(const char* path);
-
+	void InitInstance();
 	bool Init();
 	bool InitGlad();
 	bool InitWindow();
+	void InitGrid();
 	void InitGL();
 
 

@@ -11,7 +11,7 @@ public:
 	History();
 	~History();
 
-	void _do(unsigned char* imageData, Image image);
+	void _do(unsigned char* imageData, Image* image);
 	Action* _undo();
 
 };
