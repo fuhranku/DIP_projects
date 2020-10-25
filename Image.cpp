@@ -1,49 +1,97 @@
 #include "Image.h"
 
 Image::Image(const char *path) {
+    //// Creates the texture on GPU
+    //glGenTextures(1, &id);
+    //// Flips the texture when loads it because in opengl the texture coordinates are flipped
+    //stbi_set_flip_vertically_on_load(true);
+    //// Loads the texture file data
+    //unsigned char* data = stbi_load(path, &width, &height, &channels, 0);
+    //
+    //if (data)
+    //{
+    //    // Gets the texture channel format
+    //    GLenum format;
+    //    switch (channels)
+    //    {
+    //    case 1:
+    //        format = GL_RED;
+    //        break;
+    //    case 3:
+    //        format = GL_RGB;
+    //        break;
+    //    case 4:
+    //        format = GL_RGBA;
+    //        break;
+    //    }
+
+    //    // Binds the texture
+    //    glBindTexture(GL_TEXTURE_2D, id);
+    //    // Creates the texture
+    //    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+    //    // Creates the texture mipmaps
+    //    glGenerateMipmap(GL_TEXTURE_2D);
+
+    //    // Set the filtering parameters
+    //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //}
+    //else
+    //{
+    //    std::cout << "ERROR:: Unable to load texture " << path << std::endl;
+    //    glDeleteTextures(1, &id);
+    //}
+    //// We dont need the data texture anymore because is loaded on the GPU
+    //stbi_image_free(data);
+
     // Creates the texture on GPU
     glGenTextures(1, &id);
-    // Flips the texture when loads it because in opengl the texture coordinates are flipped
-    stbi_set_flip_vertically_on_load(true);
-    // Loads the texture file data
-    unsigned char* data = stbi_load(path, &width, &height, &channels, 0);
-    if (data)
-    {
-        // Gets the texture channel format
-        GLenum format;
-        switch (channels)
-        {
-        case 1:
-            format = GL_RED;
-            break;
-        case 3:
-            format = GL_RGB;
-            break;
-        case 4:
-            format = GL_RGBA;
-            break;
-        }
 
-        // Binds the texture
-        glBindTexture(GL_TEXTURE_2D, id);
-        // Creates the texture
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        // Creates the texture mipmaps
-        glGenerateMipmap(GL_TEXTURE_2D);
+    cv::Mat imgBGR = cv::imread(path);
+    cv::flip(imgBGR, imgBGR, 0);
+    //cv::Mat imgRGB;
+    //cv::cvtColor(imgBGR, imgRGB, cv::COLOR_BGR2RGB);
 
-        // Set the filtering parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
-    else
+    //cv::imshow("test", imgBGR);
+
+    // Gets the texture channel format
+    GLenum format;
+    switch (imgBGR.channels())
     {
-        std::cout << "ERROR:: Unable to load texture " << path << std::endl;
-        glDeleteTextures(1, &id);
+    case 1:
+        format = GL_BLUE;
+        break;
+    case 3:
+        format = GL_BGR;
+        break;
+    case 4:
+        format = GL_BGRA;
+        break;
     }
-    // We dont need the data texture anymore because is loaded on the GPU
-    stbi_image_free(data);
+
+   /* for (int i = 0; i < imgBGR.rows; i++)
+    {
+        const double* Mi = imgBGR.ptr<double>(i);
+        for (int j = 0; j < imgBGR.cols; j++)
+            std::cout<< Mi[j] << std::endl;
+    }*/
+
+    // Binds the texture
+    glBindTexture(GL_TEXTURE_2D, id);
+
+    // Set the filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Creates the texture
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imgBGR.cols, imgBGR.rows, 0, format, GL_UNSIGNED_BYTE, imgBGR.ptr());
+    // Creates the texture mipmaps
+    glGenerateMipmap(GL_TEXTURE_2D);
+
 }
 
 void Image::BuildPlane() {

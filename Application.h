@@ -7,9 +7,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <stb_image.h>
-#include <opencv2/opencv.hpp>
 #include <IMGUI/imgui.hpp>
 #include "userInterface.h"
+#include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include "Shader.h"
 #include "Image.h"
@@ -53,7 +53,6 @@ public:
 
 	void drawGrid();
 	
-	void MainLoop();
 	void Render();
 	void Update();
 	unsigned int LoadTexture(const char* path);

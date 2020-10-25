@@ -4,6 +4,7 @@ unsigned int Application::windowWidth = 1366;
 unsigned int Application::windowHeight = 768;
 Camera Application::camera(windowWidth, windowHeight);
 
+
 /**
 * Creates an instance of the class
 *
