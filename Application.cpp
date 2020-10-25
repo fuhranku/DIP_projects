@@ -163,7 +163,7 @@ void Application::Render() {
     glBindVertexArray(0);
 
 
-    drawGrid();
+    //drawGrid();
 
     ui.draw();
 
