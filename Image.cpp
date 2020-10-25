@@ -71,12 +71,8 @@ Image::Image(const char *path) {
         break;
     }
 
-   /* for (int i = 0; i < imgBGR.rows; i++)
-    {
-        const double* Mi = imgBGR.ptr<double>(i);
-        for (int j = 0; j < imgBGR.cols; j++)
-            std::cout<< Mi[j] << std::endl;
-    }*/
+    width = imgBGR.cols;
+    height = imgBGR.rows;
 
     // Binds the texture
     glBindTexture(GL_TEXTURE_2D, id);
@@ -88,7 +84,7 @@ Image::Image(const char *path) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // Creates the texture
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imgBGR.cols, imgBGR.rows, 0, format, GL_UNSIGNED_BYTE, imgBGR.ptr());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, imgBGR.ptr());
     // Creates the texture mipmaps
     glGenerateMipmap(GL_TEXTURE_2D);
 
