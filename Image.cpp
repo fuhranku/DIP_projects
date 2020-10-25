@@ -1,93 +1,101 @@
 #include "Image.h"
 
 Image::Image(const char *path) {
-    //// Creates the texture on GPU
-    //glGenTextures(1, &id);
-    //// Flips the texture when loads it because in opengl the texture coordinates are flipped
-    //stbi_set_flip_vertically_on_load(true);
-    //// Loads the texture file data
-    //unsigned char* data = stbi_load(path, &width, &height, &channels, 0);
-    //
-    //if (data)
-    //{
-    //    // Gets the texture channel format
-    //    GLenum format;
-    //    switch (channels)
-    //    {
-    //    case 1:
-    //        format = GL_RED;
-    //        break;
-    //    case 3:
-    //        format = GL_RGB;
-    //        break;
-    //    case 4:
-    //        format = GL_RGBA;
-    //        break;
-    //    }
-
-    //    // Binds the texture
-    //    glBindTexture(GL_TEXTURE_2D, id);
-    //    // Creates the texture
-    //    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-    //    // Creates the texture mipmaps
-    //    glGenerateMipmap(GL_TEXTURE_2D);
-
-    //    // Set the filtering parameters
-    //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //}
-    //else
-    //{
-    //    std::cout << "ERROR:: Unable to load texture " << path << std::endl;
-    //    glDeleteTextures(1, &id);
-    //}
-    //// We dont need the data texture anymore because is loaded on the GPU
-    //stbi_image_free(data);
-
     // Creates the texture on GPU
-    glGenTextures(1, &id);
+    imgBGR = cv::imread(path);
+    if (!imgBGR.empty()) {
+        glGenTextures(1, &id);
+        width = imgBGR.cols;
+        height = imgBGR.rows;
+        channels = imgBGR.channels();
+        // Compute Histogram
+        buildHistograms();
+        cv::flip(imgBGR, imgBGR, 0);
 
-    cv::Mat imgBGR = cv::imread(path);
-    cv::flip(imgBGR, imgBGR, 0);
-    //cv::Mat imgRGB;
-    //cv::cvtColor(imgBGR, imgRGB, cv::COLOR_BGR2RGB);
+        // Gets the texture channel format
+        GLenum format, internalFormat;
+        switch (imgBGR.channels())
+        {
+        case 1:
+            format = GL_BLUE;
+            internalFormat = GL_BLUE;
+            break;
+        case 3:
+            format = GL_BGR;
+            internalFormat = GL_RGB;
+            break;
+        case 4:
+            format = GL_BGRA;
+            internalFormat = GL_RGBA;
+            break;
+        }
 
-    //cv::imshow("test", imgBGR);
+        // Binds the texture
+        glBindTexture(GL_TEXTURE_2D, id);
 
-    // Gets the texture channel format
-    GLenum format;
-    switch (imgBGR.channels())
-    {
-    case 1:
-        format = GL_BLUE;
-        break;
-    case 3:
-        format = GL_BGR;
-        break;
-    case 4:
-        format = GL_BGRA;
-        break;
+        // Set the filtering parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        // Creates the texture
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, imgBGR.cols, imgBGR.rows, 0, format, GL_UNSIGNED_BYTE, imgBGR.data);
+        // Creates the texture mipmaps
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else {
+        std::cout << "ERROR::Image empty" << std::endl;
     }
 
-    width = imgBGR.cols;
-    height = imgBGR.rows;
+}
 
-    // Binds the texture
-    glBindTexture(GL_TEXTURE_2D, id);
-
-    // Set the filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Creates the texture
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, imgBGR.ptr());
-    // Creates the texture mipmaps
-    glGenerateMipmap(GL_TEXTURE_2D);
-
+void Image::buildHistograms() {
+    unsigned int totalBytes = width * height * channels;
+    int red, green, blue, rgb8;
+    switch (channels){
+    case 1:
+        // Compute 1 channel histogram
+        histogram.push_back(Histogram(GL_BLUE));
+        for (int i = 0; i < totalBytes; i++) {
+            // Compute single channel Histogram
+            histogram[0].data[(int)imgBGR.data[i]]++;
+        }
+        break;
+    case 3: case 4:
+        // Compute 4 histograms
+        histogram.push_back(Histogram(GL_BLUE));
+        histogram.push_back(Histogram(GL_GREEN));
+        histogram.push_back(Histogram(GL_RED));
+        histogram.push_back(Histogram(GL_BGR));
+        for (int i = 0; i < totalBytes; i+=channels) {
+            // Compute Blue  Histogram
+            //std::cout << "index " << i << std::endl;
+            blue = (int) imgBGR.data[i];
+            //std::cout << blue << std::endl;
+            histogram[0].data[blue]++;
+            histogram[0].setMaxValue(histogram[0].data[blue]);
+            // Compute Green Histogram
+            green = (int) imgBGR.data[i + 1];
+            histogram[1].data[green]++;
+            histogram[1].setMaxValue(histogram[1].data[green]);
+            // Compute Red   Histogram
+            red = (int)imgBGR.data[i + 2];
+            histogram[2].data[red]++;
+            histogram[2].setMaxValue(histogram[2].data[red]);
+            // Compute BGR   Histogram
+            rgb8 = blue << 16 | green << 8 | red;
+            double ratio = (double)rgb8 / (double)16777216;
+            rgb8 = ceil(ratio * 256);
+            histogram[3].data[rgb8]++;
+            histogram[3].setMaxValue(histogram[3].data[rgb8]);
+            //if (histogram[3].data[rgb8] != 0) {
+            //    std::cout << i << std::endl;
+            //}
+            //printf("index: %i, val: %i\n, max: %i", i, histogram[3].data[rgb8], histogram[3].maxValue);
+        } 
+        break;
+    }
 }
 
 void Image::BuildPlane() {

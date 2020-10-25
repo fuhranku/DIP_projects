@@ -1,3 +1,4 @@
+#pragma once
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -9,6 +10,26 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+struct Histogram {
+	int* data;
+	int type;
+	int maxValue = 0;
+	void setMaxValue(int value) {
+		maxValue = maxValue < value ? value : maxValue;
+	}
+	Histogram(int type) {
+		if (type == GL_BGR) {
+			data = new int[256];
+			memset(data, 0, 256 * sizeof(int));
+		}
+		else {
+			data = new int[256];
+			memset(data, 0, 256 * sizeof(int));
+			this->type = type;
+		}
+	}
+};
+
 struct Vertex {
 	glm::vec3 vertices;
 	glm::vec2 texture;
@@ -18,7 +39,6 @@ struct Vertex {
 		texture(texCoord) {}
 };
 
-#pragma once
 class Image
 {
 private:
@@ -28,6 +48,9 @@ public:
 	void BuildPlane();
 	unsigned int VAO;
 	unsigned int VBO;
+	std::vector<Histogram> histogram;
+	cv::Mat imgBGR;
+	void buildHistograms();
 	int width;
 	int height;
 	int channels;

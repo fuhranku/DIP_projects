@@ -22,7 +22,8 @@ void Application::InitInstance() {
 
     if (Init())
     {
-        std::cout << "=====================================================" << std::endl
+        std::cout 
+            << "=====================================================" << std::endl
             << "        Press Escape to close the program            " << std::endl
             << "=====================================================" << std::endl;
 
@@ -58,14 +59,14 @@ void Application::OnMouseButton(GLFWwindow* window, int button, int action, int 
 }
 
 void Application::OnKeyPress(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    //// Move Forward
-    //if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-    //    camera.moveUp(Application::GetInstance()->deltaTime);
-    //}
-    //// Move Backward
-    //if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-    //    camera.moveDown(Application::GetInstance()->deltaTime);
-    //}
+    // Move Forward
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+        camera.moveForward(Application::GetInstance()->deltaTime);
+    }
+    // Move Backward
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+        camera.moveBackward(Application::GetInstance()->deltaTime);
+    }
 }
 
 void Application::OnMouseScroll(GLFWwindow* window, double posX, double posY) {
@@ -95,6 +96,7 @@ void Application::ProcessKeyboardInput(GLFWwindow* window)
         delete shader;
         shader = new Shader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
     }
+
 
     // Move right
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
@@ -164,7 +166,7 @@ void Application::Render() {
     glBindVertexArray(0);
 
 
-    //drawGrid();
+    drawGrid();
 
     ui.draw();
 
@@ -216,7 +218,7 @@ bool Application::Init() {
 
 
     // Loads the texture into the GPU
-    image = new Image("assets/textures/imagen.jpg");
+    image = new Image("assets/textures/bricks2.jpg");
     // Create Plane with Image Resolution
     image->BuildPlane();
 
