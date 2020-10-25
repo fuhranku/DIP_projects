@@ -6,6 +6,8 @@
 #include <stb_image.h>
 #include <iostream>
 #include <vector>
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 struct Vertex {
 	glm::vec3 vertices;
