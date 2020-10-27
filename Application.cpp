@@ -153,6 +153,7 @@ void Application::Render() {
     // Use the shader
     shader->use();
     shader->setInt("image", 0);
+    shader->setInt("channels", image->channels);
 
     shader->setMat4("view", camera.viewMatrix);
     shader->setMat4("projection", camera.getOrthoMatrix());
@@ -166,7 +167,7 @@ void Application::Render() {
     glBindVertexArray(0);
 
 
-    drawGrid();
+    //drawGrid();
 
     ui.draw();
 
@@ -209,8 +210,6 @@ bool Application::Init() {
     // Init user interface
     ui.init(window);
 
-    
-
     // Load Image Shader
     shader = new Shader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
     // Load Grid Shader
@@ -218,7 +217,7 @@ bool Application::Init() {
 
 
     // Loads the texture into the GPU
-    image = new Image("assets/textures/bricks2.jpg");
+    image = new Image("assets/textures/carro.png");
     // Create Plane with Image Resolution
     image->BuildPlane();
 

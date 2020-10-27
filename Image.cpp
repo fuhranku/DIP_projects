@@ -2,7 +2,12 @@
 
 Image::Image(const char *path) {
     // Creates the texture on GPU
-    imgBGR = cv::imread(path);
+    imgBGR = cv::imread(path, cv::IMREAD_UNCHANGED);
+
+    //imgBGR = calcOTSU(imgBGR);
+
+    std::cout << imgBGR.channels() << std::endl;
+
     if (!imgBGR.empty()) {
         glGenTextures(1, &id);
         width = imgBGR.cols;
@@ -17,8 +22,8 @@ Image::Image(const char *path) {
         switch (imgBGR.channels())
         {
         case 1:
-            format = GL_BLUE;
-            internalFormat = GL_BLUE;
+            format = GL_RED;
+            internalFormat = GL_R8;
             break;
         case 3:
             format = GL_BGR;
@@ -58,8 +63,9 @@ void Image::buildHistograms() {
         // Compute 1 channel histogram
         histogram.push_back(Histogram(GL_BLUE));
         for (int i = 0; i < totalBytes; i++) {
-            // Compute single channel Histogram
-            histogram[0].data[(int)imgBGR.data[i]]++;
+            blue = (int)imgBGR.data[i];
+            histogram[0].data[blue]++;
+            histogram[0].setMaxValue(histogram[0].data[blue]);
         }
         break;
     case 3: case 4:
@@ -96,6 +102,14 @@ void Image::buildHistograms() {
         } 
         break;
     }
+}
+
+cv::Mat Image::calcOTSU(cv::Mat origin){
+    cv::Mat dst;
+    double thresh = 0;
+    double maxValue = 255;
+    long double thres = cv::threshold(origin, dst, thresh, maxValue, cv::THRESH_OTSU);
+    return dst;
 }
 
 void Image::BuildPlane() {

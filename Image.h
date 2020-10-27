@@ -51,6 +51,8 @@ public:
 	std::vector<Histogram> histogram;
 	cv::Mat imgBGR;
 	void buildHistograms();
+
+	cv::Mat calcOTSU(cv::Mat origin);
 	int width;
 	int height;
 	int channels;

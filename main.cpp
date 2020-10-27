@@ -5,7 +5,7 @@
  * @param{int} number of arguments
  * @param{char const *[]} running arguments
  * @returns{int} app exit code
- * */
+ **/
 int main(int argc, char const *argv[])
 {
     Application *app = Application::GetInstance();
