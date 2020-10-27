@@ -1,6 +1,6 @@
 #pragma once
 #include <imgui.hpp>
-#include <string.h>
+#include <string>
 
 class UI{
 public:
@@ -9,6 +9,8 @@ public:
 	void draw();
 	void terminate();
 private:
+	std::string activeModal = "";
+	void drawModals();
 	void showMainMenuBar();
 };
 

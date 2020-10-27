@@ -59,7 +59,7 @@ void Camera::moveForward(float time) {
 	zoom -= speed;
 
 	if (zoom < 0.015f) zoom = 0.015f;
-	std::cout << zoom << std::endl;
+	//std::cout << zoom << std::endl;
 }
 
 void Camera::moveBackward(float time) {

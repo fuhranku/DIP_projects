@@ -50,12 +50,14 @@ public:
 	unsigned int VBO;
 	std::vector<Histogram> histogram;
 	cv::Mat imgBGR;
-	void buildHistograms();
-
-	cv::Mat calcOTSU(cv::Mat origin);
+	static void Histograms(Image* image);
+	static void UpdateTextureData(Image* image);
+	static void OTSU(cv::Mat origin, cv::Mat dst, double thresh, double maxValue, Image* image);
+	static void GaussianAdaptiveThreshold(cv::Mat origin, cv::Mat dst, double thresh, double maxValue, Image* image);
 	int width;
 	int height;
 	int channels;
+	unsigned int format = 0, internalFormat = 0;
 	unsigned int id;
 };
 

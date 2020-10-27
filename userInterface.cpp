@@ -4,6 +4,8 @@
 
 Application* app;
 
+float thresh = 0.0f, maxValue = 255.0f;
+
 UI::UI() {
 }
 
@@ -20,11 +22,9 @@ bool UI::init(GLFWwindow* window) {
 	return true;
 }
 
-float Plot_ArrayGetter(void* data, int idx)
-{
+float Plot_ArrayGetter(void* data, int idx){
 	int* int_data = (int*)data;
-	int value = int_data[idx] / 1.0f;
-	return value;
+	return idx > 255 ? 0 : int_data[idx];
 }
 
 void UI::draw() {
@@ -43,26 +43,19 @@ void UI::draw() {
 		ImGui::Text("Negative filter");
 		ImGui::SameLine();
 		ImGui::Button("Apply");
-		//std::cout << Application::GetInstance()->image->histogram[2].data[125] << std::endl;
-		//std::cout << app->image->histogram[2].data[125] << std::endl;
-		//for (int i = 0; i < 256 * 256 * 256; i++) {
-		//	printf("index: %i, val: %i, max: %i\n", i, Application::GetInstance()->image->histogram[2].data[i], app->image->histogram[3].maxValue);
-		//}
-		//for (int i = 0; i < 256 * 256 * 256; i++) {
-		//	std::cout << Application::GetInstance()->image->histogram[3].data[i] << std::endl;
-		//}
-		//std::cout << Application::GetInstance()->image->histogram[3].data[7701] << std::endl;
 		ImGui::PlotHistogram(
 			"##Histogram",
 			Plot_ArrayGetter,
 			(int*)app->image->histogram[0].data,
-			256,
+			265,
 			0,
 			NULL,
 			0.0f,
 			app->image->histogram[0].maxValue, ImVec2(Application::windowWidth * 0.2f, 255.0f));
 		//ImGui::PlotHistogram("Histogram", arr, IM_ARRAYSIZE(arr), 0, NULL, 0.0f, 1.0f, ImVec2(0, 80.0f));
 	}ImGui::End();
+
+	drawModals();
 
 	// Render dear imgui into screen
 	ImGui::EndFrame();
@@ -85,10 +78,123 @@ void UI::showMainMenuBar() {
 			}
 			ImGui::EndMenu();
 		}
+		if (ImGui::BeginMenu("Filter")) {
+			if (ImGui::BeginMenu("Thresholding")) {
+				if(ImGui::MenuItem("OTSU")) {
+					activeModal = "OTSU Threshold##otsu_modal";
+				}
+				if (ImGui::MenuItem("Adaptive Threshold")) {
+					activeModal = "Gaussian Adaptive Threshold##adaptive_modal";
+				}
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Quantization")) {
+				if (ImGui::MenuItem("Color reduce")) {
+					activeModal = "Bits per pixel color reduction##color_reduce";
+				}
+				if (ImGui::MenuItem("Median cut")) {
+					//activeModal = "Gaussian Adaptive Threshold##adaptive_modal";
+				}
+				if (ImGui::MenuItem("K-means")) {
+					//activeModal = "Gaussian Adaptive Threshold##adaptive_modal";
+				}
+				ImGui::EndMenu();
+			}
+			ImGui::EndMenu();
+		}
 		ImGui::EndMainMenuBar();
 	}
 }
 
+void UI::drawModals() {
+	if (activeModal != "")
+		ImGui::OpenPopup(activeModal.c_str());
+
+	// OTSU Thresholding modal
+	ImGui::SetNextWindowSize(ImVec2(300, 150));
+	if (ImGui::BeginPopupModal("OTSU Threshold##otsu_modal"))
+	{
+		ImGui::Text("Please, set filter values");
+
+		ImGui::Text("Thresh");
+		ImGui::DragFloat("Thresh", &thresh, 0.05f, 0.0f, 255.0f, "%.2f");
+
+		ImGui::Text("Max Value");
+		ImGui::DragFloat("Max Value", &maxValue, 0.05f, 0.0f, 255.0f, "%.2f");
+
+		if (ImGui::Button("Apply", ImVec2(80, 30))) {
+			cv::Mat img = Application::GetInstance()->image->imgBGR;
+			Image::OTSU(img, img, thresh, maxValue, Application::GetInstance()->image);
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(80, 30)))
+		{
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+		ImGui::EndPopup();
+	}
+
+	// Gaussian Adaptive Thresholding modal
+	ImGui::SetNextWindowSize(ImVec2(300, 150));
+	if (ImGui::BeginPopupModal("Gaussian Adaptive Threshold##adaptive_modal"))
+	{
+		ImGui::Text("Please, set filter values");
+
+		ImGui::Text("Thresh");
+		ImGui::DragFloat("Thresh", &thresh, 0.05f, 0.0f, 255.0f, "%.2f");
+
+		ImGui::Text("Max Value");
+		ImGui::DragFloat("Max Value", &maxValue, 0.05f, 0.0f, 255.0f, "%.2f");
+
+		if (ImGui::Button("Apply", ImVec2(80, 30))) {
+			cv::Mat img = Application::GetInstance()->image->imgBGR;
+			Image::GaussianAdaptiveThreshold(img, img, thresh, maxValue, Application::GetInstance()->image);
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(80, 30)))
+		{
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+		ImGui::EndPopup();
+	}
+
+	// Color reduce modal
+	ImGui::SetNextWindowSize(ImVec2(300, 150));
+	if (ImGui::BeginPopupModal("Bits per pixel color reduction##color_reduce"))
+	{
+		ImGui::Text("Please, set operation values");
+
+		ImGui::Text("Thresh");
+		ImGui::DragFloat("Thresh", &thresh, 0.05f, 0.0f, 255.0f, "%.2f");
+
+		ImGui::Text("Max Value");
+		ImGui::DragFloat("Max Value", &maxValue, 0.05f, 0.0f, 255.0f, "%.2f");
+
+		if (ImGui::Button("Apply", ImVec2(80, 30))) {
+			cv::Mat img = Application::GetInstance()->image->imgBGR;
+			Image::GaussianAdaptiveThreshold(img, img, thresh, maxValue, Application::GetInstance()->image);
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(80, 30)))
+		{
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+		ImGui::EndPopup();
+	}
+
+}
 
 void UI::terminate() {
 	ImGui_ImplOpenGL3_Shutdown();

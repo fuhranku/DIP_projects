@@ -14,11 +14,10 @@ Image::Image(const char *path) {
         height = imgBGR.rows;
         channels = imgBGR.channels();
         // Compute Histogram
-        buildHistograms();
+        Image::Histograms(this);
         cv::flip(imgBGR, imgBGR, 0);
 
         // Gets the texture channel format
-        GLenum format, internalFormat;
         switch (imgBGR.channels())
         {
         case 1:
@@ -55,46 +54,48 @@ Image::Image(const char *path) {
 
 }
 
-void Image::buildHistograms() {
-    unsigned int totalBytes = width * height * channels;
+void Image::Histograms(Image* image) {
+    unsigned int totalBytes = image->width * image->height * image->channels;
     int red, green, blue, rgb8;
-    switch (channels){
+    double ratio;
+    image->histogram.clear();
+    switch (image->channels){
     case 1:
         // Compute 1 channel histogram
-        histogram.push_back(Histogram(GL_BLUE));
-        for (int i = 0; i < totalBytes; i++) {
-            blue = (int)imgBGR.data[i];
-            histogram[0].data[blue]++;
-            histogram[0].setMaxValue(histogram[0].data[blue]);
+        image->histogram.push_back(Histogram(GL_BLUE));
+        for (int i = 0; i < totalBytes; i += image->channels) {
+            blue = (int)image->imgBGR.data[i];
+            image->histogram[0].data[blue]++;
+            image->histogram[0].setMaxValue(image->histogram[0].data[blue]);
         }
         break;
     case 3: case 4:
         // Compute 4 histograms
-        histogram.push_back(Histogram(GL_BLUE));
-        histogram.push_back(Histogram(GL_GREEN));
-        histogram.push_back(Histogram(GL_RED));
-        histogram.push_back(Histogram(GL_BGR));
-        for (int i = 0; i < totalBytes; i+=channels) {
+        image->histogram.push_back(Histogram(GL_BLUE));
+        image->histogram.push_back(Histogram(GL_GREEN));
+        image->histogram.push_back(Histogram(GL_RED));
+        image->histogram.push_back(Histogram(GL_BGR));
+        for (int i = 0; i < totalBytes; i += image->channels) {
             // Compute Blue  Histogram
             //std::cout << "index " << i << std::endl;
-            blue = (int) imgBGR.data[i];
+            blue = (int)image->imgBGR.data[i];
             //std::cout << blue << std::endl;
-            histogram[0].data[blue]++;
-            histogram[0].setMaxValue(histogram[0].data[blue]);
+            image->histogram[0].data[blue]++;
+            image->histogram[0].setMaxValue(image->histogram[0].data[blue]);
             // Compute Green Histogram
-            green = (int) imgBGR.data[i + 1];
-            histogram[1].data[green]++;
-            histogram[1].setMaxValue(histogram[1].data[green]);
+            green = (int)image->imgBGR.data[i + 1];
+            image->histogram[1].data[green]++;
+            image->histogram[1].setMaxValue(image->histogram[1].data[green]);
             // Compute Red   Histogram
-            red = (int)imgBGR.data[i + 2];
-            histogram[2].data[red]++;
-            histogram[2].setMaxValue(histogram[2].data[red]);
+            red = (int)image->imgBGR.data[i + 2];
+            image->histogram[2].data[red]++;
+            image->histogram[2].setMaxValue(image->histogram[2].data[red]);
             // Compute BGR   Histogram
             rgb8 = blue << 16 | green << 8 | red;
-            double ratio = (double)rgb8 / (double)16777216;
+            ratio = (double)rgb8 / (double)16777216;
             rgb8 = ceil(ratio * 256);
-            histogram[3].data[rgb8]++;
-            histogram[3].setMaxValue(histogram[3].data[rgb8]);
+            image->histogram[3].data[rgb8]++;
+            image->histogram[3].setMaxValue(image->histogram[3].data[rgb8]);
             //if (histogram[3].data[rgb8] != 0) {
             //    std::cout << i << std::endl;
             //}
@@ -102,14 +103,53 @@ void Image::buildHistograms() {
         } 
         break;
     }
+    // Normalize frequency values
+    //for (auto histogram : image->histogram)
+    //{
+    //    for (int i = 0; i < 255; i++) {
+    //        ratio = (double)histogram.data[i] / (double)histogram.maxValue;
+    //        histogram.data[i] = ceil(ratio * 100);
+    //    }
+    //    histogram.maxValue = 100;
+    //}
 }
 
-cv::Mat Image::calcOTSU(cv::Mat origin){
-    cv::Mat dst;
-    double thresh = 0;
-    double maxValue = 255;
-    long double thres = cv::threshold(origin, dst, thresh, maxValue, cv::THRESH_OTSU);
-    return dst;
+void Image::OTSU(cv::Mat origin, cv::Mat dst, double thresh, double maxValue, Image* image){
+    if (image->channels > 1) {
+        cv::cvtColor(origin, dst, cv::COLOR_BGR2GRAY);
+        image->imgBGR = dst;
+        image->internalFormat = GL_R8;
+        image->format = GL_RED;
+        image->channels = 1;
+    }
+    cv::threshold(dst, dst, thresh, maxValue, cv::THRESH_OTSU);
+    // Compute Histograms
+    Image::Histograms(image);
+    // Update GPU Texture
+    Image::UpdateTextureData(image);
+    // History code here
+}
+
+void Image::GaussianAdaptiveThreshold(cv::Mat origin, cv::Mat dst, double thresh, double maxValue, Image* image){
+    if (image->channels > 1) {
+        cv::cvtColor(origin, dst, cv::COLOR_BGR2GRAY);
+        image->imgBGR = dst;
+        image->internalFormat = GL_R8;
+        image->format = GL_RED;
+        image->channels = 1;
+    }
+    cv::adaptiveThreshold(dst, dst, maxValue, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 5, 0);
+
+    // Compute Histograms
+    Image::Histograms(image);
+    // Update GPU Texture
+    Image::UpdateTextureData(image);
+    // History code here
+}
+
+void Image::UpdateTextureData(Image* image) {
+    glBindTexture(GL_TEXTURE_2D, image->id);
+    glTexImage2D(GL_TEXTURE_2D, 0, image->internalFormat, image->width, image->height, 0, image->format, GL_UNSIGNED_BYTE, image->imgBGR.data);
 }
 
 void Image::BuildPlane() {
