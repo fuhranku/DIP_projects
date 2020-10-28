@@ -93,7 +93,7 @@ void UI::showMainMenuBar() {
 					activeModal = "Bits per pixel color reduction##color_reduce";
 				}
 				if (ImGui::MenuItem("Median cut")) {
-					//activeModal = "Gaussian Adaptive Threshold##adaptive_modal";
+					activeModal = "Median cut##median_cut";
 				}
 				if (ImGui::MenuItem("K-means")) {
 					//activeModal = "Gaussian Adaptive Threshold##adaptive_modal";
@@ -181,6 +181,34 @@ void UI::drawModals() {
 		if (ImGui::Button("Apply", ImVec2(80, 30))) {
 			cv::Mat img = Application::GetInstance()->image->imgBGR;
 			Image::GaussianAdaptiveThreshold(img, img, thresh, maxValue, Application::GetInstance()->image);
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(80, 30)))
+		{
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+		ImGui::EndPopup();
+	}
+
+	// Median cut algorithm modal
+	ImGui::SetNextWindowSize(ImVec2(300, 150));
+	if (ImGui::BeginPopupModal("Median cut##median_cut"))
+	{
+		ImGui::Text("Please, set operation values");
+
+		ImGui::Text("Thresh");
+		ImGui::DragFloat("Thresh", &thresh, 0.05f, 0.0f, 255.0f, "%.2f");
+
+		ImGui::Text("Max Value");
+		ImGui::DragFloat("Max Value", &maxValue, 0.05f, 0.0f, 255.0f, "%.2f");
+
+		if (ImGui::Button("Apply", ImVec2(80, 30))) {
+			cv::Mat img = Application::GetInstance()->image->imgBGR;
+			Image::MedianCut(img, img, 16, Application::GetInstance()->image);
 			ImGui::CloseCurrentPopup();
 			activeModal = "";
 		}

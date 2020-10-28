@@ -147,6 +147,55 @@ void Image::GaussianAdaptiveThreshold(cv::Mat origin, cv::Mat dst, double thresh
     // History code here
 }
 
+void Image::MedianCut(cv::Mat origin, cv::Mat dst, int blocks, Image* image) {
+    std::vector<cv::Vec3b> LUT;
+    // Step 1: Find biggest range (to determine how to order)
+    findBiggestRange(image);
+
+    // Step 2:  Quantize
+    std::array<int, 10> vec = { 1,2,3,4,5,6,7,8,9 };
+
+    //std::sort(origin.ptr(),
+    //    origin.ptr()+(image->width*image->height*image->channels*sizeof(uchar)),
+    //    [](uchar a, uchar b) {return a > b; });
+
+    for (auto item : vec)
+        std::cout << item << " ";
+
+}
+
+unsigned int Image::findBiggestRange(Image* image) {
+    // Iterate over R,G and B histograms to find min and max values
+    // Get R channel min and max
+    glm::ivec2 Rminmax = glm::ivec2(-1), Gminmax = glm::ivec2(-1), Bminmax = glm::ivec2(-1);
+    // Reminder: Working at BGR color space
+    for (int i = 0; i < 256; i++) {
+        if (image->histogram[0].data[i] != 0 && Bminmax.x == -1)
+            Bminmax.x = i;
+        if (image->histogram[1].data[i] != 0 && Gminmax.x == -1)
+            Gminmax.x = i;
+        if (image->histogram[2].data[i] != 0 && Rminmax.x == -1)
+            Rminmax.x = i;
+        if (image->histogram[0].data[i] != 0)
+            Bminmax.y = i;
+        if (image->histogram[1].data[i] != 0)
+            Gminmax.y = i;
+        if (image->histogram[2].data[i] != 0)
+            Rminmax.y = i;
+    }
+    // Get magnitude of each vector
+    const int bRange = Bminmax.y - Bminmax.x;
+    const int gRange = Gminmax.y - Gminmax.x;
+    const int rRange = Rminmax.y - Rminmax.x;
+    // Get max between channels
+    const int bgrMax = glm::max(glm::max(bRange, gRange), rRange);
+    if (bgrMax == bRange)
+        return GL_BLUE;
+    else if (bgrMax == gRange)
+        return GL_GREEN;
+    return GL_RED;
+}
+
 void Image::UpdateTextureData(Image* image) {
     glBindTexture(GL_TEXTURE_2D, image->id);
     glTexImage2D(GL_TEXTURE_2D, 0, image->internalFormat, image->width, image->height, 0, image->format, GL_UNSIGNED_BYTE, image->imgBGR.data);

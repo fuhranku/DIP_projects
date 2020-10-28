@@ -42,6 +42,7 @@ struct Vertex {
 class Image
 {
 private:
+	static unsigned int findBiggestRange(Image* image);
 public:
 	Image(const char* path);
 	~Image();
@@ -54,6 +55,7 @@ public:
 	static void UpdateTextureData(Image* image);
 	static void OTSU(cv::Mat origin, cv::Mat dst, double thresh, double maxValue, Image* image);
 	static void GaussianAdaptiveThreshold(cv::Mat origin, cv::Mat dst, double thresh, double maxValue, Image* image);
+	static void MedianCut(cv::Mat origin, cv::Mat dst, int blocks, Image* image);
 	int width;
 	int height;
 	int channels;
