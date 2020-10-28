@@ -103,7 +103,7 @@ void Image::Histograms(Image* image) {
         } 
         break;
     }
-    // Normalize frequency values
+    // Normalized frequency values
     //for (auto histogram : image->histogram)
     //{
     //    for (int i = 0; i < 255; i++) {
@@ -147,21 +147,49 @@ void Image::GaussianAdaptiveThreshold(cv::Mat origin, cv::Mat dst, double thresh
     // History code here
 }
 
+
 void Image::MedianCut(cv::Mat origin, cv::Mat dst, int blocks, Image* image) {
     std::vector<cv::Vec3b> LUT;
     // Step 1: Find biggest range (to determine how to order)
-    findBiggestRange(image);
+    unsigned int longestChannel = findBiggestRange(image);
+    // Transform any image to RGB color space
+    cv::Mat rgbImg = Image::Any2RGB(origin, image->channels); 
 
     // Step 2:  Quantize
-    std::array<int, 10> vec = { 1,2,3,4,5,6,7,8,9 };
+    std::list<rgbColor> colorList;
+    for (int i = 0; i < image->width * image->height * 3; i += 3 ) {
+        colorList.push_back(rgbColor(rgbImg.data[i], rgbImg.data[i + 1], rgbImg.data[i + 2]));
+    }
 
-    //std::sort(origin.ptr(),
-    //    origin.ptr()+(image->width*image->height*image->channels*sizeof(uchar)),
-    //    [](uchar a, uchar b) {return a > b; });
+    if (longestChannel == GL_BLUE) {
+        std::sort(colorList.begin(), colorList.end(),
+            [](rgbColor a, rgbColor b) {return a.b > b.b; });
+    }
+    else if (longestChannel == GL_GREEN) {
+        std::sort(colorList.begin(), colorList.end(),
+            [](rgbColor a, rgbColor b) {return a.g > b.g; });
+    }
+    else {
+        std::sort(colorList.begin(),colorList.end(),
+            [](rgbColor a, rgbColor b) {return a.r > b.r; });
+    }
 
-    for (auto item : vec)
-        std::cout << item << " ";
+    for (auto color : colorList)
+        printf("(%i,%i,%i)\n", color.b, color.g, color.r);
 
+}
+
+cv::Mat Image::Any2RGB(cv::Mat origin, int channels) {
+    cv::Mat rgbimg = origin.clone();
+    // Transform any kind of image to RGB
+    if (channels == 4) {
+        cv::cvtColor(origin, rgbimg, cv::COLOR_BGRA2BGR);
+    }
+    else if (channels == 1) {
+        cv::cvtColor(origin, rgbimg, cv::COLOR_GRAY2BGR);
+    }
+
+    return rgbimg;
 }
 
 unsigned int Image::findBiggestRange(Image* image) {
@@ -194,6 +222,30 @@ unsigned int Image::findBiggestRange(Image* image) {
     else if (bgrMax == gRange)
         return GL_GREEN;
     return GL_RED;
+}
+
+void Image::ColorReduce(cv::Mat origin, cv::Mat dst, int numBits, Image* image) {
+
+    uchar maskBit = 0xFF;
+
+    // keep numBits as 1 and (8 - numBits) would be all 0 towards the right
+    maskBit = maskBit << numBits;
+
+    for (int j = 0; j < origin.rows; j++)
+        for (int i = 0; i < origin.cols; i++)
+        {
+            cv::Vec3b valVec = origin.at<cv::Vec3b>(j, i);
+            valVec[0] = valVec[0] & maskBit;
+            valVec[1] = valVec[1] & maskBit;
+            valVec[2] = valVec[2] & maskBit;
+            dst.at<cv::Vec3b>(j, i) = valVec;
+        }
+
+    // Compute Histograms
+    Image::Histograms(image);
+    // Update GPU Texture
+    Image::UpdateTextureData(image);
+
 }
 
 void Image::UpdateTextureData(Image* image) {
