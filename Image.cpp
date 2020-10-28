@@ -146,22 +146,33 @@ void Image::GaussianAdaptiveThreshold(double thresh, double maxValue, Image* ima
 }
 
 void Image::KMeans(int k, Image* image) {
-    // Transform image to Grayscale (if applies)
-    //Any2Gray(image);
-    // Compute Adaptive Threshold
-    cv::Mat centers(8,1,CV_32FC1);
-    cv::Mat labels, data;
+    
+    // convert to float & reshape to a [3 x W*H] Mat 
+    //  (so every pixel is on a row of it's own)
+    cv::Mat data;
     image->imgData.convertTo(data, CV_32F);
-    cv::kmeans(
-        data,
-        k,
-        labels,
-        cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT,10,1.0),
-        3,
+    data = data.reshape(1, data.total());
+
+    // do kmeans
+    cv::Mat labels, centers;
+    kmeans(data, k, labels, cv::TermCriteria(cv::TermCriteria::MAX_ITER, 10, 1.0), 3,
         cv::KMEANS_PP_CENTERS, centers);
-    cv::imshow("asd", data);
-    //data.convertTo(data, CV_32FC3);
-    //image->imgData = data;
+
+    // reshape both to a single row of Vec3f pixels:
+    centers = centers.reshape(3, centers.rows);
+    data = data.reshape(3, data.rows);
+
+    // replace pixel values with their center value:
+    cv::Vec3f* p = data.ptr<cv::Vec3f>();
+    for (size_t i = 0; i < data.rows; i++) {
+        int center_id = labels.at<int>(i);
+        p[i] = centers.at<cv::Vec3f>(center_id);
+    }
+
+    // back to 2d, and uchar:
+    image->imgData = data.reshape(3, image->imgData.rows);
+    image->imgData.convertTo(image->imgData, CV_8U);
+
     // Compute Histograms
     Image::Histograms(image);
     // Update GPU Texture
