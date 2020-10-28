@@ -6,11 +6,13 @@ class UI{
 public:
 	UI();
 	bool init(GLFWwindow* window);
-	void draw();
+	void mainDraw();
 	void terminate();
 private:
 	std::string activeModal = "";
 	void drawModals();
-	void showMainMenuBar();
+	void drawTopMenu();
+	void drawBottomMenu();
+	void drawSidebar();
 };
 

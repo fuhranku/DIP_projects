@@ -58,21 +58,24 @@ class Image
 private:
 	static unsigned int findBiggestRange(std::vector<bgrColor> color);
 	static void QuantizeMC(std::vector<bgrColor>& out,std::vector<bgrColor> color, int currentDepth, int maxDepth);
-	static cv::Mat Any2BGR(cv::Mat origin, int channels);
+	static Image* Any2BGR (Image* image);
+	static Image* Any2Gray(Image* image);
 public:
 	Image(const char* path);
+	Image();
 	~Image();
 	void BuildPlane();
 	unsigned int VAO;
 	unsigned int VBO;
 	std::vector<Histogram> histogram;
-	cv::Mat imgBGR;
+	cv::Mat imgData;
 	static void Histograms(Image* image);
 	static void UpdateTextureData(Image* image);
-	static void OTSU(cv::Mat origin, cv::Mat dst, double thresh, double maxValue, Image* image);
-	static void GaussianAdaptiveThreshold(cv::Mat origin, cv::Mat dst, double thresh, double maxValue, Image* image);
-	static void MedianCut(cv::Mat origin, cv::Mat dst, int blocks, Image* image);
-	static void ColorReduce(cv::Mat origin, cv::Mat dst, int numBits, Image* image);
+	static void OTSU(double thresh, double maxValue, Image* image);
+	static void GaussianAdaptiveThreshold(double thresh, double maxValue, Image* image);
+	static void MedianCut(int blocks, Image* image);
+	static void KMeans(int k, Image* image);
+	static void ColorReduce(int numBits, Image* image);
 	int width;
 	int height;
 	int channels;

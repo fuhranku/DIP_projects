@@ -106,6 +106,11 @@ void Camera::checkCameraRotation() {
 	if (pitch < -90.0f) pitch = -90.0f;
 }
 
+float Camera::getUIZoom() {
+	float uiZoom = 1 / zoom * 100;
+	return uiZoom;
+}
+
 void Camera::resize(int windowWidth, int windowHeight) {
 	//perspectiveMatrix = glm::perspective(glm::radians(45.0f), (float)windowWidth / (float)windowHeight, nearPlane, farPlane);
 }

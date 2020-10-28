@@ -19,7 +19,6 @@
 class Application {
 
 	const char* windowTitle = "Tarea PDI"; // Window title
-	float deltaTime;
 	float lastTime = 0;
 	float currentTime = 0;
 	float totalTime = 0;
@@ -44,6 +43,7 @@ private:
 	Application();
 	~Application();
 public:
+	float deltaTime;
 	Image *image; // Index (GPU) of the texture
 	static Camera camera;
 	static unsigned int windowWidth; // Window current width

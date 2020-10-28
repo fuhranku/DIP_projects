@@ -33,6 +33,7 @@ public:
     void moveUp(float time);
     void moveDown(float time);
     void resize(int windowWidth, int windowHeight);
+    float getUIZoom();
 private:
     void checkCameraRotation();
 };

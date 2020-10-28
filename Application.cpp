@@ -167,9 +167,9 @@ void Application::Render() {
     glBindVertexArray(0);
 
 
-    //drawGrid();
+    drawGrid();
 
-    ui.draw();
+    ui.mainDraw();
 
     // Swap the buffer
     glfwSwapBuffers(window);
@@ -180,6 +180,8 @@ void Application::Render() {
 }
 
 void Application::drawGrid() {
+
+    if (camera.getUIZoom() < 1000.0f) return;
 
     gridShader->use();
     gridShader->setMat4("model", glm::mat4(1.0f));
