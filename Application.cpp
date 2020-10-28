@@ -58,9 +58,26 @@ void Application::OnMouseButton(GLFWwindow* window, int button, int action, int 
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
         double xpos, ypos;
-        //getting cursor position
+        // Step 0: 2d Viewport Coordinates
         glfwGetCursorPos(window, &xpos, &ypos);
-        std::cout << "Cursor Position at (" << xpos << " : " << ypos << std::endl;
+        // Step 1: 3d Normalised Device Coordinates
+        float x = (2.0f * xpos) / windowWidth - 1.0f;
+        float y = 1.0f - (2.0f * ypos) / windowHeight;
+        float z = 1.0f;
+        glm::vec3 ray_nds = glm::vec3(x, y, z);
+        //std::cout << "Cursor Position at (" << x << " : " << y << ")" << std::endl;
+        // Step 2: 4d Homogeneous Clip Coordinates
+        glm::vec4 ray_clip = glm::vec4(glm::vec2(ray_nds.x, ray_nds.y), -1.0, 1.0);
+        // Step 3: 4d Eye (Camera) Coordinates
+        glm::vec4 ray_eye = glm::inverse(camera.getOrthoMatrix()) * ray_clip;
+        ray_eye = glm::vec4(glm::vec2(ray_eye.x, ray_eye.y), -1.0, 0.0);
+        // Step 4: 4d World Coordinates
+        glm::vec4 temp = (glm::inverse(camera.getWorldToViewMatrix()) * ray_eye);
+        glm::vec3 ray_wor = glm::vec3(temp.x, temp.y, temp.z);
+        //ray_wor = glm::normalize(ray_wor);
+
+        printf("(%f,%f,%f)\n", ray_wor.x, ray_wor.y, ray_wor.z);
+
     }
 }
 
