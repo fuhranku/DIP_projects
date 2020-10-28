@@ -217,7 +217,7 @@ bool Application::Init() {
 
 
     // Loads the texture into the GPU
-    image = new Image("assets/textures/otsu.jpg");
+    image = new Image("assets/textures/landscape1.jpg");
     // Create Plane with Image Resolution
     image->BuildPlane();
 

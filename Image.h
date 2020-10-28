@@ -11,6 +11,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <functional>
 #include <algorithm>
+#include <numeric>
+
 
 struct Histogram {
 	int* data;
@@ -41,21 +43,22 @@ struct Vertex {
 		texture(texCoord) {}
 };
 
-class rgbColor{
+class bgrColor{
 public:
-	int r, g, b;
-	rgbColor(int r, int g, int b) {
-		this->r = r;
-		this->g = g;
+	int b, g, r;
+	bgrColor(int b, int g, int r) {
 		this->b = b;
+		this->g = g;
+		this->r = r;
 	}
 };
 
 class Image
 {
 private:
-	static unsigned int findBiggestRange(Image* image);
-	static cv::Mat Any2RGB(cv::Mat origin, int channels);
+	static unsigned int findBiggestRange(std::vector<bgrColor> color);
+	static void QuantizeMC(std::vector<bgrColor>& out,std::vector<bgrColor> color, int currentDepth, int maxDepth);
+	static cv::Mat Any2BGR(cv::Mat origin, int channels);
 public:
 	Image(const char* path);
 	~Image();

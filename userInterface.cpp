@@ -48,12 +48,12 @@ void UI::draw() {
 		ImGui::PlotHistogram(
 			"##Histogram",
 			Plot_ArrayGetter,
-			(int*)app->image->histogram[0].data,
+			(int*)app->image->histogram[3].data,
 			265,
 			0,
 			NULL,
 			0.0f,
-			app->image->histogram[0].maxValue, ImVec2(Application::windowWidth * 0.2f, 255.0f));
+			app->image->histogram[3].maxValue, ImVec2(Application::windowWidth * 0.2f, 255.0f));
 		//ImGui::PlotHistogram("Histogram", arr, IM_ARRAYSIZE(arr), 0, NULL, 0.0f, 1.0f, ImVec2(0, 80.0f));
 	}ImGui::End();
 

@@ -1,5 +1,7 @@
 #include "Image.h"
 
+//std::vector<rgbColor> Image::medianCutOut;
+
 Image::Image(const char *path) {
     // Creates the texture on GPU
     imgBGR = cv::imread(path, cv::IMREAD_UNCHANGED);
@@ -148,69 +150,31 @@ void Image::GaussianAdaptiveThreshold(cv::Mat origin, cv::Mat dst, double thresh
 }
 
 
-void Image::MedianCut(cv::Mat origin, cv::Mat dst, int blocks, Image* image) {
-    std::vector<cv::Vec3b> LUT;
-    // Step 1: Find biggest range (to determine how to order)
-    unsigned int longestChannel = findBiggestRange(image);
-    // Transform any image to RGB color space
-    cv::Mat rgbImg = Image::Any2RGB(origin, image->channels); 
-
-    // Step 2:  Quantize
-    std::list<rgbColor> colorList;
-    for (int i = 0; i < image->width * image->height * 3; i += 3 ) {
-        colorList.push_back(rgbColor(rgbImg.data[i], rgbImg.data[i + 1], rgbImg.data[i + 2]));
-    }
-
-    if (longestChannel == GL_BLUE) {
-        std::sort(colorList.begin(), colorList.end(),
-            [](rgbColor a, rgbColor b) {return a.b > b.b; });
-    }
-    else if (longestChannel == GL_GREEN) {
-        std::sort(colorList.begin(), colorList.end(),
-            [](rgbColor a, rgbColor b) {return a.g > b.g; });
-    }
-    else {
-        std::sort(colorList.begin(),colorList.end(),
-            [](rgbColor a, rgbColor b) {return a.r > b.r; });
-    }
-
-    for (auto color : colorList)
-        printf("(%i,%i,%i)\n", color.b, color.g, color.r);
-
-}
-
-cv::Mat Image::Any2RGB(cv::Mat origin, int channels) {
-    cv::Mat rgbimg = origin.clone();
-    // Transform any kind of image to RGB
-    if (channels == 4) {
-        cv::cvtColor(origin, rgbimg, cv::COLOR_BGRA2BGR);
-    }
-    else if (channels == 1) {
-        cv::cvtColor(origin, rgbimg, cv::COLOR_GRAY2BGR);
-    }
-
-    return rgbimg;
-}
-
-unsigned int Image::findBiggestRange(Image* image) {
+unsigned int Image::findBiggestRange(std::vector<bgrColor> color) {
     // Iterate over R,G and B histograms to find min and max values
     // Get R channel min and max
-    glm::ivec2 Rminmax = glm::ivec2(-1), Gminmax = glm::ivec2(-1), Bminmax = glm::ivec2(-1);
+    glm::ivec2 Rminmax = glm::ivec2(-1, INT_MAX), Gminmax = glm::ivec2(-1, INT_MAX), Bminmax = glm::ivec2(-1, INT_MAX);
     // Reminder: Working at BGR color space
-    for (int i = 0; i < 256; i++) {
-        if (image->histogram[0].data[i] != 0 && Bminmax.x == -1)
-            Bminmax.x = i;
-        if (image->histogram[1].data[i] != 0 && Gminmax.x == -1)
-            Gminmax.x = i;
-        if (image->histogram[2].data[i] != 0 && Rminmax.x == -1)
-            Rminmax.x = i;
-        if (image->histogram[0].data[i] != 0)
-            Bminmax.y = i;
-        if (image->histogram[1].data[i] != 0)
-            Gminmax.y = i;
-        if (image->histogram[2].data[i] != 0)
-            Rminmax.y = i;
+    for (int i = 0; i < color.size(); i++) {
+        if (color[i].b > Bminmax.x)
+            Bminmax.x = color[i].b;
+
+        if (color[i].b < Bminmax.y)
+            Bminmax.y = color[i].b;
+
+        if (color[i].g > Gminmax.x)
+            Gminmax.x = color[i].g;
+
+        if (color[i].g < Gminmax.y)
+            Gminmax.y = color[i].g;
+
+        if (color[i].r > Rminmax.x)
+            Rminmax.x = color[i].r;
+
+        if (color[i].r < Rminmax.y)
+            Rminmax.y = color[i].r;
     }
+
     // Get magnitude of each vector
     const int bRange = Bminmax.y - Bminmax.x;
     const int gRange = Gminmax.y - Gminmax.x;
@@ -222,6 +186,114 @@ unsigned int Image::findBiggestRange(Image* image) {
     else if (bgrMax == gRange)
         return GL_GREEN;
     return GL_RED;
+}
+
+void Image::QuantizeMC(std::vector<bgrColor> &out, std::vector<bgrColor> color, int currentDepth, int maxDepth){
+
+    if (currentDepth == maxDepth) {
+        //calculate the centroid
+        bgrColor centroid = bgrColor(0, 0, 0);
+
+        bgrColor accColor = std::accumulate(color.begin(), color.end(), centroid,
+                            [](bgrColor acc, bgrColor actual) {
+                                acc.b += actual.b;
+                                acc.g += actual.g;
+                                acc.r += actual.r;
+                                return acc;
+                            });
+
+        centroid.b = accColor.b / color.size();
+        centroid.g = accColor.g / color.size();
+        centroid.r = accColor.r / color.size();
+
+        //printf("%i, %i, %i \n", centroid.g, centroid.b, centroid.r);
+
+        out.push_back(centroid);
+        return;
+    }
+
+    // Step 1: Find biggest range (to determine how to order)
+    unsigned int longestChannel = findBiggestRange(color);
+
+    // Step 2:  Quantize
+    if (longestChannel == GL_BLUE) {
+        std::sort(color.begin(), color.end(),
+            [](bgrColor a, bgrColor b) {return a.b > b.b; });
+    }
+    else if (longestChannel == GL_GREEN) {
+        std::sort(color.begin(), color.end(),
+            [](bgrColor a, bgrColor b) {return a.g > b.g; });
+    }
+    else {
+        std::sort(color.begin(), color.end(),
+            [](bgrColor a, bgrColor b) {return a.r > b.r; });
+    }
+
+
+    std::size_t const median = color.size() / 2;
+    std::vector<bgrColor> split_lo(color.begin(), color.begin() + median);
+    std::vector<bgrColor> split_hi(color.begin() + median, color.end());
+
+    QuantizeMC(out,split_lo, currentDepth + 1, maxDepth);
+    QuantizeMC(out,split_hi, currentDepth + 1, maxDepth);
+}
+
+
+void Image::MedianCut(cv::Mat origin, cv::Mat dst, int blocks, Image* image) {
+    std::vector<bgrColor> LUT;
+
+    // Transform any image to RGB color space
+    cv::Mat bgrImg = Image::Any2BGR(origin, image->channels);
+
+    std::vector<bgrColor> colorList;
+    for (int i = 0; i < image->width * image->height * 3; i += 3 ) {
+        colorList.push_back(bgrColor(bgrImg.data[i], bgrImg.data[i + 1], bgrImg.data[i + 2]));
+    }
+
+    QuantizeMC(LUT,colorList, 0, 10);
+
+    for (int i = 0; i < image->width * image->height * 3; i += 3) {
+        int index = -1;
+        float finalDist = INT_MAX;
+        for (int j = 0; j < LUT.size(); j++) {
+            //printf("%i, %i, %i \n", c.g, c.b, c.r);
+            //compute euclidean distance
+            glm::vec3 lutColor = glm::vec3(LUT[j].b, LUT[j].g, LUT[j].r);
+            glm::vec3 imageColor = glm::vec3(bgrImg.data[i], bgrImg.data[i + 1], bgrImg.data[i + 2]);
+            
+            float tempDist = glm::distance(lutColor, imageColor);
+            if (tempDist < finalDist) {
+                finalDist = tempDist;
+                index = j;
+            };
+        }
+
+        bgrImg.data[i] = LUT[index].b;
+        bgrImg.data[i+1] = LUT[index].g;
+        bgrImg.data[i+2] = LUT[index].r;
+    }
+
+    image->imgBGR = bgrImg;
+
+    // Compute Histograms
+    Image::Histograms(image);
+    // Update GPU Texture
+    Image::UpdateTextureData(image);
+
+
+}
+
+cv::Mat Image::Any2BGR(cv::Mat origin, int channels) {
+    cv::Mat rgbimg = origin.clone();
+    // Transform any kind of image to RGB
+    if (channels == 4) {
+        cv::cvtColor(origin, rgbimg, cv::COLOR_BGRA2BGR);
+    }
+    else if (channels == 1) {
+        cv::cvtColor(origin, rgbimg, cv::COLOR_GRAY2BGR);
+    }
+
+    return rgbimg;
 }
 
 void Image::ColorReduce(cv::Mat origin, cv::Mat dst, int numBits, Image* image) {
