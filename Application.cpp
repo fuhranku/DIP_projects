@@ -55,7 +55,13 @@ void Application::OnMouseMotion(GLFWwindow* window, double xpos, double ypos)
 }
 
 void Application::OnMouseButton(GLFWwindow* window, int button, int action, int mods) {
-    //placeholder
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    {
+        double xpos, ypos;
+        //getting cursor position
+        glfwGetCursorPos(window, &xpos, &ypos);
+        std::cout << "Cursor Position at (" << xpos << " : " << ypos << std::endl;
+    }
 }
 
 void Application::OnKeyPress(GLFWwindow* window, int key, int scancode, int action, int mods) {
