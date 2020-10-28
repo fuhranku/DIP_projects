@@ -54,9 +54,11 @@ public:
 	static void UpdateTextureData(Image* image);
 	static void OTSU(cv::Mat origin, cv::Mat dst, double thresh, double maxValue, Image* image);
 	static void GaussianAdaptiveThreshold(cv::Mat origin, cv::Mat dst, double thresh, double maxValue, Image* image);
+	static void ColorReduce(cv::Mat origin, cv::Mat dst, int numBits, Image* image);
 	int width;
 	int height;
 	int channels;
+	int bitDepth = 256;
 	unsigned int format = 0, internalFormat = 0;
 	unsigned int id;
 };

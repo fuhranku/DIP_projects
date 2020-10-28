@@ -147,6 +147,30 @@ void Image::GaussianAdaptiveThreshold(cv::Mat origin, cv::Mat dst, double thresh
     // History code here
 }
 
+void Image::ColorReduce(cv::Mat origin, cv::Mat dst, int numBits, Image* image) {
+
+    uchar maskBit = 0xFF;
+
+    // keep numBits as 1 and (8 - numBits) would be all 0 towards the right
+    maskBit = maskBit << numBits;
+
+    for (int j = 0; j < origin.rows; j++)
+        for (int i = 0; i < origin.cols; i++)
+        {
+            cv::Vec3b valVec = origin.at<cv::Vec3b>(j, i);
+            valVec[0] = valVec[0] & maskBit;
+            valVec[1] = valVec[1] & maskBit;
+            valVec[2] = valVec[2] & maskBit;
+            dst.at<cv::Vec3b>(j, i) = valVec;
+        }
+
+    // Compute Histograms
+    Image::Histograms(image);
+    // Update GPU Texture
+    Image::UpdateTextureData(image);
+
+}
+
 void Image::UpdateTextureData(Image* image) {
     glBindTexture(GL_TEXTURE_2D, image->id);
     glTexImage2D(GL_TEXTURE_2D, 0, image->internalFormat, image->width, image->height, 0, image->format, GL_UNSIGNED_BYTE, image->imgBGR.data);

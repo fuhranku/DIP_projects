@@ -6,6 +6,8 @@ Application* app;
 
 float thresh = 0.0f, maxValue = 255.0f;
 
+
+
 UI::UI() {
 }
 
@@ -122,6 +124,7 @@ void UI::drawModals() {
 		ImGui::Text("Max Value");
 		ImGui::DragFloat("Max Value", &maxValue, 0.05f, 0.0f, 255.0f, "%.2f");
 
+
 		if (ImGui::Button("Apply", ImVec2(80, 30))) {
 			cv::Mat img = Application::GetInstance()->image->imgBGR;
 			Image::OTSU(img, img, thresh, maxValue, Application::GetInstance()->image);
@@ -172,15 +175,26 @@ void UI::drawModals() {
 	{
 		ImGui::Text("Please, set operation values");
 
-		ImGui::Text("Thresh");
-		ImGui::DragFloat("Thresh", &thresh, 0.05f, 0.0f, 255.0f, "%.2f");
+		const char* bit_reduction_options[] = {
+			"1 bit",
+			"2 bits",
+			"3 bits",
+			"4 bits",
+			"5 bits",
+			"6 bits",
+			"7 bits",
+			"8 bits",
+		};
 
-		ImGui::Text("Max Value");
-		ImGui::DragFloat("Max Value", &maxValue, 0.05f, 0.0f, 255.0f, "%.2f");
+		static int current_bit_reduction = 4;
+
+		ImGui::Combo("combo", &current_bit_reduction, bit_reduction_options, IM_ARRAYSIZE(bit_reduction_options));
+
+		ImGui::Separator();
 
 		if (ImGui::Button("Apply", ImVec2(80, 30))) {
 			cv::Mat img = Application::GetInstance()->image->imgBGR;
-			Image::GaussianAdaptiveThreshold(img, img, thresh, maxValue, Application::GetInstance()->image);
+			Image::ColorReduce(img, img, current_bit_reduction+1, Application::GetInstance()->image);
 			ImGui::CloseCurrentPopup();
 			activeModal = "";
 		}
