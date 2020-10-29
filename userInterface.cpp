@@ -63,6 +63,10 @@ void UI::drawSidebar() {
 			if (ImGui::TreeNode("Image metadata")) {
 				const char* channels[] = { "Grayscale","Red-Green","RGB","RGBA" };
 				ImGui::Text("Channels: %s", channels[Application::GetInstance()->image->channels - 1]);
+				ImGui::Text("Resolution: %ix%i", Application::GetInstance()->image->width, Application::GetInstance()->image->height);
+				ImGui::Text("Size: %i %s", Application::GetInstance()->image->size.val, Application::GetInstance()->image->size.unit.c_str());
+				ImGui::Text("DPI: %i", Application::GetInstance()->image->dpi);
+				ImGui::Text("File extension: %s", Application::GetInstance()->image->ext.str_name.c_str());
 				ImGui::Separator();
 				ImGui::Text("Histogram information: ");
 				drawHistograms();
@@ -84,18 +88,25 @@ void UI::drawTopMenu() {
 		{
 			if (ImGui::MenuItem("New Tab")) {
 			}
-			if (ImGui::MenuItem("Open Image")) {
+			if (ImGui::MenuItem("Open Image","ctrl + O")) {
 				activeModal = "Open Image##open_image";
 			}
-			if (ImGui::MenuItem("Save Image", NULL, false)) {
-				//Application::SaveImage(Application::GetInstance()->image, imageFormat);
+			pushDisable(!Application::GetInstance()->imageLoaded);
+			if (ImGui::MenuItem("Save","ctrl + S")) {
+				Application::UpdateImageOnDisk(Application::GetInstance()->image);
+				activeModal = "Success##saved_modal";
 			}
+			popDisable(!Application::GetInstance()->imageLoaded);
+			pushDisable(!Application::GetInstance()->imageLoaded);
+			if (ImGui::MenuItem("Export As", "ctrl + shift + S")) {
+				static char buffer[1024];
+				strcpy_s(buffer, Application::WindowsPathGetter(1).c_str());
+				Application::ExportImage(buffer);
+			}
+			popDisable(!Application::GetInstance()->imageLoaded);
 			ImGui::EndMenu();
 		}
-		if (!Application::GetInstance()->imageLoaded) {
-			ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-		}
+		pushDisable(!Application::GetInstance()->imageLoaded);
 		if (ImGui::BeginMenu("Filter")) {
 			if (ImGui::BeginMenu("Thresholding")) {
 				if(ImGui::MenuItem("OTSU")) {
@@ -120,11 +131,7 @@ void UI::drawTopMenu() {
 			}
 			ImGui::EndMenu();
 		}
-		if (!Application::GetInstance()->imageLoaded)
-		{
-			ImGui::PopItemFlag();
-			ImGui::PopStyleVar();
-		}
+		popDisable(!Application::GetInstance()->imageLoaded);
 
 		ImGui::EndMainMenuBar();
 	}
@@ -152,7 +159,11 @@ void UI::drawBottomMenu() {
 		if(ImGui::Button("+##more_zoom")) {
 			Application::GetInstance()->camera.moveForward(Application::GetInstance()->deltaTime);
 		}
+		ImGui::SameLine();
+		ImGui::Dummy(ImVec2(100.0f, 0.0f));
+		ImGui::SameLine();
 	}
+
 	ImGui::End();
 	ImGui::PopStyleVar();
 	ImGui::PopStyleVar();
@@ -341,7 +352,7 @@ void UI::drawModals() {
 		ImGui::InputText("##load_image", buffer, IM_ARRAYSIZE(buffer));
 		ImGui::SameLine();
 		if (ImGui::Button("...##load_image_btn", ImVec2(60, 20))) {
-			strcpy_s(buffer, Application::WindowsPathGetter().c_str());
+			strcpy_s(buffer, Application::WindowsPathGetter(0).c_str());
 		}
 
 		if (ImGui::Button("Load", ImVec2(80, 30))) {
@@ -360,12 +371,16 @@ void UI::drawModals() {
 
 		ImGui::EndPopup();
 	}
-}
 
-void UI::terminate() {
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
+	ImGui::SetNextWindowSize(ImVec2(150, 100));
+	if (ImGui::BeginPopupModal("Success##saved_modal")) {
+		ImGui::Text("Saved succesfully!");
+		if (ImGui::Button("OK", ImVec2(80, 30))) {
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+		ImGui::EndPopup();
+	}
 }
 
 void UI::drawHistograms() {
@@ -404,4 +419,25 @@ void UI::drawHistograms() {
 	}
 	}
 
+}
+
+void UI::pushDisable(bool condition) {
+	if (condition) {
+		ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+	}
+}
+
+void UI::popDisable(bool condition) {
+	if (condition)
+	{
+		ImGui::PopItemFlag();
+		ImGui::PopStyleVar();
+	}
+}
+
+void UI::terminate() {
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 }

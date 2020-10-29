@@ -92,6 +92,24 @@ void Application::OnKeyPress(GLFWwindow* window, int key, int scancode, int acti
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
         camera.moveBackward(Application::GetInstance()->deltaTime);
     }
+
+    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS && mods == GLFW_MOD_CONTROL) {
+        Application::GetInstance()->ui.activeModal = "Open Image##open_image";
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_S)            == GLFW_PRESS &&
+        glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS &&
+        Application::GetInstance()->imageLoaded) {
+        Application::UpdateImageOnDisk(Application::GetInstance()->image);
+        Application::GetInstance()->ui.activeModal = "Success##saved_modal";
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_S)            == GLFW_PRESS &&
+        glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS &&
+        glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)   == GLFW_PRESS &&
+        Application::GetInstance()->imageLoaded) {
+        Application::GetInstance()->ui.activeModal = "Export As##export_as";
+    }    
 }
 
 void Application::OnMouseScroll(GLFWwindow* window, double posX, double posY) {
@@ -139,7 +157,8 @@ void Application::ProcessKeyboardInput(GLFWwindow* window)
     }
 
     // Move Down
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && 
+        glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) != GLFW_PRESS) {
         camera.moveDown(deltaTime);
     }
 }
@@ -175,42 +194,50 @@ void Application::OpenImage(char* path, int colorSpace) {
     app->InitGrid();
 }
 
-std::string Application::WindowsPathGetter() {
+std::string Application::WindowsPathGetter(int operation) {
     OPENFILENAME ofn;
     char fileName[MAX_PATH] = "";
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(OPENFILENAME);
     ofn.hwndOwner = NULL;
-    ofn.lpstrFilter = "Windows bitmaps (*.bmp;*.dib)\0"
-                      "*.bmp;*.dib\0"
-                      "JPEG files (*.jpeg;*.jpg;*.jpe)\0"
-                      "*.jpeg;*.jpg;*.jpe\0"
-                      "Portable Network Graphics (*.png)\0"
-                      "*.png\0"
-                      "WebP (*.webp)\0"
-                      "*.webp\0"
-                      "Portable image format (*.pbm;*.pgm;*.ppm;*.pxm;*.pnm)\0"
-                      "*.pbm;*.pgm;*.ppm;*.pxm;*.pnm\0"
-                      "PFM files (*.pfm)\0"
-                      "*.pfm\0"
-                      "Sun rasters (*.sr;*.ras)\0"
-                      "*.sr;*.ras\0"
-                      "TIFF (*.tiff;*.tif)\0"
-                      "*.tiff;*.tif\0"
-                      "OpenEXR (*.exr)\0"
-                      "*.exr\0"
-                      "Radiance HDR (*.hdr;*.pic)\0"
-                      "*.hdr;*.pic\0";
     ofn.lpstrFile = fileName;
     ofn.nMaxFile = MAX_PATH;
-    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
     ofn.lpstrDefExt = "";
     std::string path;
-    if (GetOpenFileName(&ofn))
-        path = fileName;
+    ofn.lpstrFilter = 
+        "JPEG files (*.jpeg;*.jpg;*.jpe)\0"
+        "*.jpeg;*.jpg;*.jpe\0"
+        "Portable Network Graphics (*.png)\0"
+        "*.png\0"
+        "Windows bitmaps (*.bmp;*.dib)\0"
+        "*.bmp;*.dib\0"
+        "TIFF (*.tiff;*.tif)\0"
+        "*.tiff;*.tif\0"
+        "WebP (*.webp)\0"
+        "*.webp\0";
+    if (operation == 0) {
+        ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_NOCHANGEDIR;
+        if (GetOpenFileName(&ofn))
+            path = fileName;
+    }
+    else {
+        ofn.Flags = OFN_EXPLORER | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
+        if (GetSaveFileName(&ofn))
+            path = fileName;
+    }
     return path; 
 }
 
+void Application::ExportImage(const char* path) {
+
+}
+
+
+void Application::UpdateImageOnDisk(Image* image) {
+    cv::Mat flippedImg = image->imgData.clone();
+    cv::flip(flippedImg, flippedImg, 0);
+    cv::imwrite(image->path, flippedImg);
+}
 
 /**
 * Render Function
@@ -227,9 +254,7 @@ void Application::Render() {
     // Use the shader
     drawImage();
 
-
-
-    //drawGrid();
+    drawGrid();
 
     ui.mainDraw();
 
