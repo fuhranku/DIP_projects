@@ -10,9 +10,76 @@ Image::Image(const char *path) {
     // Creates the texture on GPU
     imgData = cv::imread(path, cv::IMREAD_UNCHANGED);
 
-    //imgData = calcOTSU(imgData);
-
     //std::cout << imgData.channels() << std::endl;
+
+    if (!imgData.empty()) {
+        glGenTextures(1, &id);
+        width = imgData.cols;
+        height = imgData.rows;
+        channels = imgData.channels();
+        // Compute Histogram
+        Image::Histograms(this);
+        cv::flip(imgData, imgData, 0);
+
+        // Gets the texture channel format
+        switch (imgData.channels())
+        {
+        case 1:
+            format = GL_RED;
+            internalFormat = GL_R8;
+            break;
+        case 3:
+            format = GL_BGR;
+            internalFormat = GL_RGB;
+            break;
+        case 4:
+            format = GL_BGRA;
+            internalFormat = GL_RGBA;
+            break;
+        }
+
+        // Binds the texture
+        glBindTexture(GL_TEXTURE_2D, id);
+
+        // Set the filtering parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        // The line that solves everything
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        // Creates the texture
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, imgData.cols, imgData.rows, 0, format, GL_UNSIGNED_BYTE, imgData.data);
+        // Creates the texture mipmaps
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else {
+        std::cout << "ERROR::Image empty" << std::endl;
+    }
+
+}
+
+Image::Image(const char* path, int colorSpace) {
+    // Creates the texture on GPU
+    switch (colorSpace) {
+    // Inherit from image
+    case 0:
+        imgData = cv::imread(path, cv::IMREAD_UNCHANGED);
+        break;
+    // Force to grayscale
+    case 1:
+        imgData = cv::imread(path, cv::IMREAD_GRAYSCALE);
+        break;
+    // Force to BGR
+    case 2:
+        imgData = cv::imread(path, cv::IMREAD_COLOR);
+        break;
+     // Force to BGRA
+    case 3:
+        imgData = cv::imread(path, cv::IMREAD_COLOR);
+        cv::cvtColor(imgData, imgData, cv::COLOR_BGR2BGRA);
+        break;
+    }
 
     if (!imgData.empty()) {
         glGenTextures(1, &id);

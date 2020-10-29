@@ -62,6 +62,7 @@ private:
 	static Image* Any2Gray(Image* image);
 public:
 	Image(const char* path);
+	Image(const char* path, int colorSpace);
 	Image();
 	~Image();
 	void BuildPlane();

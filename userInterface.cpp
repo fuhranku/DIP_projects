@@ -58,22 +58,19 @@ void UI::drawSidebar() {
 		ImGuiWindowFlags_NoSavedSettings |
 		ImGuiWindowFlags_NoBringToFrontOnFocus);
 	{
-		if (ImGui::TreeNode("Image metadata")) {
-			const char* channels[] = { "Grayscale","Red-Green","RGB","RGBA" };
-			ImGui::Text("Channels: %s", channels[Application::GetInstance()->image->channels - 1]);
-			ImGui::TreePop();
+		if (Application::GetInstance()->imageLoaded) {
+			ImGui::SetNextItemOpen(true);
+			if (ImGui::TreeNode("Image metadata")) {
+				const char* channels[] = { "Grayscale","Red-Green","RGB","RGBA" };
+				ImGui::Text("Channels: %s", channels[Application::GetInstance()->image->channels - 1]);
+				ImGui::Separator();
+				ImGui::Text("Histogram information: ");
+				drawHistograms();
+				ImGui::TreePop();
+			}
 		}
-		ImGui::PlotHistogram(
-			"##Histogram",
-			Plot_ArrayGetter,
-			(int*)app->image->histogram[0].data,
-			265,
-			0,
-			"RGB Histogram",
-			0.0f,
-			app->image->histogram[0].maxValue, ImVec2(Application::windowWidth * 0.2f, 255.0f));
-		//ImGui::PlotHistogram("Histogram", arr, IM_ARRAYSIZE(arr), 0, NULL, 0.0f, 1.0f, ImVec2(0, 80.0f));
-	}ImGui::End();
+	}
+	ImGui::End();
 	ImGui::PopStyleVar();
 	ImGui::PopStyleVar();
 }
@@ -85,13 +82,19 @@ void UI::drawTopMenu() {
 		// File Option
 		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::MenuItem("New Scene")) {
+			if (ImGui::MenuItem("New Tab")) {
 			}
-			if (ImGui::MenuItem("Open Scene")) {
+			if (ImGui::MenuItem("Open Image")) {
+				activeModal = "Open Image##open_image";
 			}
-			if (ImGui::MenuItem("Save Scene", NULL, false)) {
+			if (ImGui::MenuItem("Save Image", NULL, false)) {
+				//Application::SaveImage(Application::GetInstance()->image, imageFormat);
 			}
 			ImGui::EndMenu();
+		}
+		if (!Application::GetInstance()->imageLoaded) {
+			ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 		}
 		if (ImGui::BeginMenu("Filter")) {
 			if (ImGui::BeginMenu("Thresholding")) {
@@ -117,6 +120,12 @@ void UI::drawTopMenu() {
 			}
 			ImGui::EndMenu();
 		}
+		if (!Application::GetInstance()->imageLoaded)
+		{
+			ImGui::PopItemFlag();
+			ImGui::PopStyleVar();
+		}
+
 		ImGui::EndMainMenuBar();
 	}
 }
@@ -311,10 +320,88 @@ void UI::drawModals() {
 		}
 		ImGui::EndPopup();
 	}
+
+	// Open Image modal
+	ImGui::SetNextWindowSize(ImVec2(300, 150));
+	if (ImGui::BeginPopupModal("Open Image##open_image")) {
+		ImGui::Text("Color space");
+		ImGui::SameLine();
+		const char* color_space_options[] = {
+			"Inherit", // 0
+			"Grayscale", // 1
+			"RGB", // 2
+			"RGBA", // 3
+		};
+		static int color_space_option = 0;
+
+		ImGui::Combo("##color_space_options", &color_space_option, color_space_options, IM_ARRAYSIZE(color_space_options));
+
+		ImGui::Text("Image path");
+		static char buffer[1024] = "./assets/textures/landscape1.jpg";
+		ImGui::InputText("##load_image", buffer, IM_ARRAYSIZE(buffer));
+		ImGui::SameLine();
+		if (ImGui::Button("...##load_image_btn", ImVec2(60, 20))) {
+			strcpy_s(buffer, Application::WindowsPathGetter().c_str());
+		}
+
+		if (ImGui::Button("Load", ImVec2(80, 30))) {
+			Application::OpenImage(buffer, color_space_option);
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(80, 30)))
+		{
+			strcpy_s(buffer, "./assets/textures/landscape1.jpg");
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+
+		ImGui::EndPopup();
+	}
 }
 
 void UI::terminate() {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
+}
+
+void UI::drawHistograms() {
+	switch (Application::GetInstance()->image->channels) {
+	case 1:
+	{
+		const char* histogram_options[] = { "Grayscale" };
+		static int histogram_current_option = 0;
+		ImGui::Combo("##color_bits_reduction", &histogram_current_option, histogram_options, IM_ARRAYSIZE(histogram_options));
+		ImGui::PlotHistogram(
+			"##Histogram",
+			Plot_ArrayGetter,
+			(int*)app->image->histogram[histogram_current_option].data,
+			256,
+			0,
+			"Grayscale",
+			0.0f,
+			app->image->histogram[histogram_current_option].maxValue, ImVec2(Application::windowWidth * 0.17f, 120.0f));
+		break;
+	}
+	case 3: case 4: {
+		const char* histogram_options[] = { "Blue Channel","Green Channel","Red Channel","RGB Channels" };
+		const char* histogram_text[] = { "Blue","Green","Red","RGB" };
+		static int histogram_current_option = 0;
+		ImGui::Combo("##color_bits_reduction", &histogram_current_option, histogram_options, IM_ARRAYSIZE(histogram_options));
+		ImGui::PlotHistogram(
+			"##Histogram",
+			Plot_ArrayGetter,
+			(int*)app->image->histogram[histogram_current_option].data,
+			256,
+			0,
+			histogram_text[histogram_current_option],
+			0.0f,
+			app->image->histogram[histogram_current_option].maxValue, ImVec2(Application::windowWidth * 0.17f, 120.0f));
+		break;
+	}
+	}
+
 }

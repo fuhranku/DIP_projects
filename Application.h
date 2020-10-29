@@ -15,6 +15,7 @@
 #include "Image.h"
 #include "Camera.h"
 #include "History.h"
+#include "Windows.h"
 
 class Application {
 
@@ -48,11 +49,12 @@ public:
 	static Camera camera;
 	static unsigned int windowWidth; // Window current width
 	static unsigned int windowHeight; // Window current height
-
+	bool imageLoaded = false;
 	static Application* GetInstance();
-
+	static void OpenImage(char* path, int colorSpace);
+	static std::string WindowsPathGetter();
 	void drawGrid();
-	
+	void drawImage();
 	void Render();
 	void Update();
 	unsigned int LoadTexture(const char* path);

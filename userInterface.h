@@ -14,5 +14,6 @@ private:
 	void drawTopMenu();
 	void drawBottomMenu();
 	void drawSidebar();
+	void drawHistograms();
 };
 

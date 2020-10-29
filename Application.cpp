@@ -30,12 +30,14 @@ void Application::InitInstance() {
         //Main Loop
         Update();
 
-        // Deletes the texture from the gpu
-        glDeleteTextures(1, &image->id);
-        // Deletes the vertex array from the GPU
-        glDeleteVertexArrays(1, &image->VAO);
-        // Deletes the vertex object from the GPU
-        glDeleteBuffers(1, &image->VBO);
+        if (imageLoaded) {
+            // Deletes the texture from the gpu
+            glDeleteTextures(1, &image->id);
+            // Deletes the vertex array from the GPU
+            glDeleteVertexArrays(1, &image->VAO);
+            // Deletes the vertex object from the GPU
+            glDeleteBuffers(1, &image->VBO);
+        }
         // Destroy the shader
         delete shader;
 
@@ -103,6 +105,7 @@ void Application::OnMouseScroll(GLFWwindow* window, double posX, double posY) {
     }
 }
 
+
 void Application::ProcessKeyboardInput(GLFWwindow* window)
 {
     float MOVEMENT_SPEED = 10.0f;
@@ -160,6 +163,54 @@ void Application::CalcDeltaTime() {
 }
 
 
+void Application::OpenImage(char* path, int colorSpace) {
+    Application* app = Application::GetInstance();
+    app->image = new Image(path, colorSpace);
+    app->imageLoaded = true;
+
+    // Create Plane with Image Resolution
+    app->image->BuildPlane();
+
+    // Initialize grid data
+    app->InitGrid();
+}
+
+std::string Application::WindowsPathGetter() {
+    OPENFILENAME ofn;
+    char fileName[MAX_PATH] = "";
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(OPENFILENAME);
+    ofn.hwndOwner = NULL;
+    ofn.lpstrFilter = "Windows bitmaps (*.bmp;*.dib)\0"
+                      "*.bmp;*.dib\0"
+                      "JPEG files (*.jpeg;*.jpg;*.jpe)\0"
+                      "*.jpeg;*.jpg;*.jpe\0"
+                      "Portable Network Graphics (*.png)\0"
+                      "*.png\0"
+                      "WebP (*.webp)\0"
+                      "*.webp\0"
+                      "Portable image format (*.pbm;*.pgm;*.ppm;*.pxm;*.pnm)\0"
+                      "*.pbm;*.pgm;*.ppm;*.pxm;*.pnm\0"
+                      "PFM files (*.pfm)\0"
+                      "*.pfm\0"
+                      "Sun rasters (*.sr;*.ras)\0"
+                      "*.sr;*.ras\0"
+                      "TIFF (*.tiff;*.tif)\0"
+                      "*.tiff;*.tif\0"
+                      "OpenEXR (*.exr)\0"
+                      "*.exr\0"
+                      "Radiance HDR (*.hdr;*.pic)\0"
+                      "*.hdr;*.pic\0";
+    ofn.lpstrFile = fileName;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.lpstrDefExt = "";
+    std::string path;
+    if (GetOpenFileName(&ofn))
+        path = fileName;
+    return path; 
+}
+
 
 /**
 * Render Function
@@ -174,6 +225,25 @@ void Application::Render() {
 
     /** Draws code goes here **/
     // Use the shader
+    drawImage();
+
+
+
+    //drawGrid();
+
+    ui.mainDraw();
+
+    // Swap the buffer
+    glfwSwapBuffers(window);
+
+    //Process Keyboard Input
+    ProcessKeyboardInput(window);
+    
+}
+
+void Application::drawImage() {
+    if (!imageLoaded) return;
+
     shader->use();
     shader->setInt("image", 0);
     shader->setInt("channels", image->channels);
@@ -188,21 +258,11 @@ void Application::Render() {
     // Renders the triangle gemotry
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
-
-
-    drawGrid();
-
-    ui.mainDraw();
-
-    // Swap the buffer
-    glfwSwapBuffers(window);
-
-    //Process Keyboard Input
-    ProcessKeyboardInput(window);
-    
 }
 
 void Application::drawGrid() {
+
+    if (!imageLoaded) return;
 
     if (camera.getUIZoom() < 1000.0f) return;
 
@@ -239,15 +299,6 @@ bool Application::Init() {
     shader = new Shader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
     // Load Grid Shader
     gridShader = new Shader("assets/shaders/gridShader.vert", "assets/shaders/gridShader.frag");
-
-
-    // Loads the texture into the GPU
-    image = new Image("assets/textures/landscape1.jpg");
-    // Create Plane with Image Resolution
-    image->BuildPlane();
-
-    // Initialize grid data
-    InitGrid();
 
     return true;
 }
