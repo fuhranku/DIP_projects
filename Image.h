@@ -77,6 +77,7 @@ public:
 	static void MedianCut(int blocks, Image* image);
 	static void KMeans(int k, Image* image);
 	static void ColorReduce(int numBits, Image* image);
+	static void Rotate(Image* image, float deg);
 	int width;
 	int height;
 	int channels;

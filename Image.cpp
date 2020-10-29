@@ -458,6 +458,10 @@ void Image::UpdateTextureData(Image* image) {
     glTexImage2D(GL_TEXTURE_2D, 0, image->internalFormat, image->width, image->height, 0, image->format, GL_UNSIGNED_BYTE, image->imgData.data);
 }
 
+void Image::Rotate(Image* image, float deg) {
+
+}
+
 void Image::BuildPlane() {
 
     float width = this->width, height = this->height;
