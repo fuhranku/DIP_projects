@@ -7,15 +7,12 @@ Image::Image(const char *path) {
     // Creates the texture on GPU
     imgData = cv::imread(path, cv::IMREAD_UNCHANGED);
 
-    //std::cout << imgData.channels() << std::endl;
-
     if (!imgData.empty()) {
         // Save path string
         this->path = path;
 
         // Compute file extension
         getFileExtension(path);
-
 
         // Create textures
         glGenTextures(1, &id);
@@ -49,7 +46,6 @@ Image::Image(const char *path) {
 
         // Binds the texture
         glBindTexture(GL_TEXTURE_2D, id);
-
         // Set the filtering parameters
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -61,6 +57,8 @@ Image::Image(const char *path) {
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, imgData.cols, imgData.rows, 0, format, GL_UNSIGNED_BYTE, imgData.data);
         // Creates the texture mipmaps
         glGenerateMipmap(GL_TEXTURE_2D);
+        // Compute canvas
+        canvas.Build(width,height);
     }
     else {
         std::cout << "ERROR::Image empty" << std::endl;
@@ -144,6 +142,9 @@ Image::Image(const char* path, int colorSpace) {
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, imgData.cols, imgData.rows, 0, format, GL_UNSIGNED_BYTE, imgData.data);
         // Creates the texture mipmaps
         glGenerateMipmap(GL_TEXTURE_2D);
+
+        // Compute canvas
+        canvas.Build(width, height);
     }
     else {
         std::cout << "ERROR::Image empty" << std::endl;
@@ -221,9 +222,8 @@ void Image::OTSU(double thresh, double maxValue, Image* image){
     // Update GPU Texture
     Image::UpdateTextureData(image);
     // History code here
-    image->history._do(image, THRESHOLD_OTSU);
+    //image->history._do(image, THRESHOLD_OTSU);
 }
-
 
 void Image::GaussianAdaptiveThreshold(double thresh, double maxValue, Image* image){
     // Transform image to Grayscale (if applies)
@@ -531,14 +531,12 @@ void Image::Rotate(Image* image, float deg) {
     image->width = image->imgData.cols;
     image->height = image->imgData.rows;
 
-    //cv::flip(image->imgData, image->imgData,0);
-    //cv::imshow("asdasd", image->imgData);
-
-    RemovePlane(image);
-    BuildPlane(image);
+    // Update canvas
+    image->canvas.Update(image->width,image->height);
 
     // Update GPU Texture
     Image::UpdateTextureData(image);
+
     // Update history queue/stack
 }
 
@@ -574,65 +572,30 @@ void Image::EqualizeHist(Image* image) {
     Image::UpdateTextureData(image);
 }
 
-void Image::RemovePlane(Image *image) {
-    // Deletes the vertex array from the GPU
-    glDeleteVertexArrays(1, &image->VAO);
-    // Deletes the vertex object from the GPU
-    glDeleteBuffers(1, &image->VBO);
-}
-
-void Image::BuildPlane(Image *image) {
-
-    float width = image->width, height = image->height;
-    float quadVertices[] = {
-        // positions        // Color              // texture Coords
-        -width / 2,  height / 2, 0.0f, 1.0f, 0.0f, 0.0f,  0.0f, 1.0f,
-        -width / 2, -height / 2, 0.0f, 0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
-         width / 2,  height / 2, 0.0f, 0.0f, 0.0f, 1.0f,  1.0f, 1.0f,
-         width / 2, -height / 2, 0.0f, 0.5f, 0.5f, 0.75f, 1.0f, 0.0f,
-    };
-    // Setup plane VAO
-    glGenVertexArrays(1, &image->VAO);
-    glGenBuffers(1, &image->VBO);
-    glBindVertexArray(image->VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, image->VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-    // Position
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    // Color
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    // Texture Coords
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-}
-
-void Image::Undo(Image* image) {
-    //Pop action from do stack
-    Action* action = image->history._undo();
-
-    if (action) {
-        //Update image data
-        image->imgData = action->imgData;
-        image->width = action->width;
-        image->height = action->height;
-        image->channels = action->channels;
-        image->bitDepth = action->bitDepth;
-        image->dpi = action->dpi;
-        image->size = action->size;
-        image->ext = action->ext;
-        image->path = action->path;
-        image->format = action->format;
-        image->internalFormat = action->internalFormat;
-
-        //Recreate Plane
-        RemovePlane(image);
-        BuildPlane(image);
-
-        // Compute Histograms
-        Histograms(image);
-        // Update GPU Texture
-        UpdateTextureData(image);
-    }
-}
+//void Image::Undo(Image* image) {
+//    //Pop action from do stack
+//    Action* action = image->history._undo();
+//
+//    if (action) {
+//        //Update image data
+//        image->imgData = action->imgData;
+//        image->width = action->width;
+//        image->height = action->height;
+//        image->channels = action->channels;
+//        image->bitDepth = action->bitDepth;
+//        image->dpi = action->dpi;
+//        image->size = action->size;
+//        image->ext = action->ext;
+//        image->path = action->path;
+//        image->format = action->format;
+//        image->internalFormat = action->internalFormat;
+//
+//        //Recreate Plane
+//        image->canvas.Update(image->width,image->height);
+//
+//        // Compute Histograms
+//        Histograms(image);
+//        // Update GPU Texture
+//        UpdateTextureData(image);
+//    }
+//}

@@ -28,11 +28,9 @@ class Application {
 	int totalFrames = 0;
 	int fps = 0;
 	GLFWwindow* window; // Window pointer
-	Shader *shader, *gridShader; // Shader object
+	Shader *shader; // Shader object
 	UI ui; // User Interface 
 	History history;
-	// GRID
-	unsigned int gridVAO, gridVBO, gridIBO, gridLength;
 
 private:
 	static Application* _application;
@@ -68,7 +66,6 @@ public:
 	bool Init();
 	bool InitGlad();
 	bool InitWindow();
-	void InitGrid();
 	void InitGL();
 
 

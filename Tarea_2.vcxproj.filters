@@ -18,6 +18,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="History.cpp" />
     <ClCompile Include="Action.cpp" />
+    <ClCompile Include="Canvas.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -27,6 +28,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="History.h" />
     <ClInclude Include="Action.h" />
+    <ClInclude Include="Canvas.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\basic.frag" />

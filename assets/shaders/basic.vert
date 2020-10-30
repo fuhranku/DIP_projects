@@ -2,9 +2,7 @@
 // Atributte 0 of the vertex
 layout (location = 0) in vec3 vertexPosition;
 // Atributte 1 of the vertex
-layout (location = 1) in vec3 vertexColor;
-// Atributte 1 of the vertex
-layout (location = 2) in vec2 vertexUV;
+layout (location = 1) in vec2 vertexUV;
 
 uniform mat4 model;
 uniform mat4 view;

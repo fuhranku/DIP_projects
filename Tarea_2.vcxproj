@@ -139,6 +139,7 @@
     <ClCompile Include="Action.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Canvas.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="History.cpp" />
     <ClCompile Include="Image.cpp" />
@@ -158,6 +159,7 @@
     <ClInclude Include="Action.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Canvas.h" />
     <ClInclude Include="History.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="Shader.h" />

@@ -34,9 +34,9 @@ void Application::InitInstance() {
             // Deletes the texture from the gpu
             glDeleteTextures(1, &image->id);
             // Deletes the vertex array from the GPU
-            glDeleteVertexArrays(1, &image->VAO);
+            glDeleteVertexArrays(1, &image->canvas.VAO);
             // Deletes the vertex object from the GPU
-            glDeleteBuffers(1, &image->VBO);
+            glDeleteBuffers(1, &image->canvas.VBO);
         }
         // Destroy the shader
         delete shader;
@@ -184,14 +184,9 @@ void Application::ProcessKeyboardInput(GLFWwindow* window)
         glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)  == GLFW_PRESS &&
         imageLoaded) {
 
-        
-        printf("CURSOR: %f , %f \n", currentMousePos.x, currentMousePos.y);
-
         glm::vec2 dir = glm::vec2(currentMousePos.x - lastMousePos.x,
                                   currentMousePos.y - lastMousePos.y);
         camera.moveDir(deltaTime, dir);
-
-        printf("DIR: %f , %f \n", dir.x, dir.y);
     }
     else {
     }
@@ -233,9 +228,6 @@ void Application::OpenImage(char* path, int colorSpace) {
     if (app->image->imgData.empty()) return;
     // Let software know we have a loaded image now
     app->imageLoaded = true;
-
-    // Create Plane with Image Resolution
-    Image::BuildPlane(app->image);
 
     // Initialize grid data
     app->InitGrid();
@@ -376,29 +368,20 @@ void Application::drawImage() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, image->id);
     // Binds the vertex array to be drawn
-    glBindVertexArray(image->VAO);
+    glBindVertexArray(image->canvas.VAO);
     // Renders the triangle gemotry
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
 }
 
 void Application::drawGrid() {
-
+    // Don't draw if no image is loaded
     if (!imageLoaded) return;
 
+    // Draw when zoom reaches this point
     if (camera.getUIZoom() < 1000.0f) return;
 
-    gridShader->use();
-    gridShader->setMat4("model", glm::mat4(1.0f));
-    gridShader->setMat4("view", camera.viewMatrix);
-    gridShader->setMat4("projection", camera.getOrthoMatrix());
-
-    glBindVertexArray(gridVAO);
-
-    glDrawElements(GL_LINES, gridLength, GL_UNSIGNED_INT, NULL);
-
-    glBindVertexArray(0);
-
+    image->canvas.grid.Draw();
 }
 
 
@@ -419,8 +402,6 @@ bool Application::Init() {
 
     // Load Image Shader
     shader = new Shader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
-    // Load Grid Shader
-    gridShader = new Shader("assets/shaders/gridShader.vert", "assets/shaders/gridShader.frag");
 
     return true;
 }
@@ -447,49 +428,6 @@ void Application::Update() {
         // Check and call events
         glfwPollEvents();
     }
-}
-
-void Application::InitGrid() {
-    std::vector<glm::vec3> vertices;
-    std::vector<glm::uvec4> indices;
-
-    for (int j = -(image->height /2); j <= image->height /2; ++j) {
-        for (int i = -(image->width /2); i <= image->width /2; ++i) {
-            float x = (float)i;
-            float y = (float)j;
-            vertices.push_back(glm::vec3(x, y, 0.015));
-        }
-    }
-
-    for (int j = 0; j < image->height; ++j) {
-        for (int i = 0; i < image->width; ++i) {
-
-            int row1 = j * (image->width + 1);
-            int row2 = (j + 1) * (image->width + 1);
-
-            indices.push_back(glm::uvec4(row1 + i, row1 + i + 1, row1 + i + 1, row2 + i + 1));
-            indices.push_back(glm::uvec4(row2 + i + 1, row2 + i, row2 + i, row1 + i));
-
-        }
-    }
-
-    glGenVertexArrays(1, &gridVAO);
-    glBindVertexArray(gridVAO);
-    glGenBuffers(1, &gridVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, gridVBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-    glGenBuffers(1, &gridIBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gridIBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(glm::uvec4), &indices[0], GL_STATIC_DRAW);
-
-    glBindVertexArray(0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    gridLength = (GLuint)indices.size() * 4;
 }
 
 /**
@@ -566,7 +504,6 @@ bool Application::InitGlad() {
     }
     return true;
 }
-
 
 /**
  * Initialize the opengl context

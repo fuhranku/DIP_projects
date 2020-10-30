@@ -13,7 +13,8 @@
 #include <algorithm>
 #include <numeric>
 #include <string>
-#include "History.h"
+#include "Canvas.h"
+//#include "History.h"
 
 #define IMG_BMP 0x0001
 #define IMG_JPG 0x0002
@@ -104,13 +105,10 @@ public:
 	Image(const char* path, int colorSpace);
 	Image();
 	~Image();
-	unsigned int VAO;
-	unsigned int VBO;
+	Canvas canvas;
 	std::vector<Histogram> histogram;
 	cv::Mat imgData;
-	History history;
-
-	static void BuildPlane(Image* image);
+	//History history;
 	static void Histograms(Image* image);
 	static void UpdateTextureData(Image* image);
 	static void OTSU(double thresh, double maxValue, Image* image);
@@ -119,7 +117,6 @@ public:
 	static void KMeans(int k, Image* image);
 	static void ColorReduce(int numBits, Image* image);
 	static void EqualizeHist(Image* image);
-	static void RemovePlane(Image* image);
 	static void Rotate(Image* image, float deg);
 	static void Flip(Image* image, int mode);
 	static void Undo(Image* image);
