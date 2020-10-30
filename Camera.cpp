@@ -3,6 +3,7 @@
 #include "Application.h"
 
 const float MOVEMENT_SPEED = 10.0f;
+const float PANNING_SPEED = 50.0f;
 Application* app2;
 
 Camera::Camera(int windowWidth, int windowHeight) :
@@ -100,8 +101,8 @@ void Camera::moveDown(float time) {
 }
 
 void Camera::moveDir(float time, glm::vec2 dir) {
-	float speed = MOVEMENT_SPEED * time;
-	glm::vec3 delta = glm::vec3(dir.x, dir.y, 0);
+	float speed = PANNING_SPEED * time;
+	glm::vec3 delta = glm::vec3(dir.x, -dir.y, 0);
 	position += -speed * delta;
 	viewMatrix = glm::lookAt(position, position + viewDirection, UP);
 }

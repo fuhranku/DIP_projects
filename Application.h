@@ -43,6 +43,7 @@ private:
 	static void OnMouseScroll(GLFWwindow* window, double posX, double posY);
 	void ProcessKeyboardInput(GLFWwindow* window);
 	void CalcDeltaTime();
+	void UpdateCursorPos();
 	Application();
 	~Application();
 public:

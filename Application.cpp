@@ -184,18 +184,27 @@ void Application::ProcessKeyboardInput(GLFWwindow* window)
         glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)  == GLFW_PRESS &&
         imageLoaded) {
 
-        double xpos, ypos;
-        lastMousePos = currentMousePos;
-        glfwGetCursorPos(window, &xpos, &ypos);
-        currentMousePos.x = xpos - windowWidth/2;
-        currentMousePos.y = ypos - windowHeight/2;
+        
+        printf("CURSOR: %f , %f \n", currentMousePos.x, currentMousePos.y);
 
-        camera.moveDir(deltaTime, glm::vec2(xpos - lastMousePos.x,
-                                            ypos - lastMousePos.y));
+        glm::vec2 dir = glm::vec2(currentMousePos.x - lastMousePos.x,
+                                  currentMousePos.y - lastMousePos.y);
+        camera.moveDir(deltaTime, dir);
+
+        printf("DIR: %f , %f \n", dir.x, dir.y);
     }
     else {
     }
 
+}
+
+void Application::UpdateCursorPos() {
+    double xpos, ypos;
+    lastMousePos.x = currentMousePos.x;
+    lastMousePos.y = currentMousePos.y;
+    glfwGetCursorPos(window, &xpos, &ypos);
+    currentMousePos.x = xpos - windowWidth * 0.8f / 2;
+    currentMousePos.y = ypos - windowHeight / 2;
 }
 
 void Application::CalcDeltaTime() {
@@ -423,6 +432,9 @@ void Application::Update() {
     // Loop until something tells the window, that it has to be closed
     while (!glfwWindowShouldClose(window))
     {
+        // Update Cursor Position
+        UpdateCursorPos();
+
         // Checks for keyboard inputs
         ProcessKeyboardInput(window);
 
