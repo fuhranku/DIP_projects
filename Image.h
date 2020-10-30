@@ -96,17 +96,18 @@ private:
 	static void QuantizeMC(std::vector<bgrColor>& out,std::vector<bgrColor> color, int currentDepth, int maxDepth);
 	static Image* Any2BGR (Image* image);
 	static Image* Any2Gray(Image* image);
+	static Image* Any2YCrCb(Image* image);
 	void getFileExtension(std::string path);
 public:
 	Image(const char* path);
 	Image(const char* path, int colorSpace);
 	Image();
 	~Image();
-	void BuildPlane();
 	unsigned int VAO;
 	unsigned int VBO;
 	std::vector<Histogram> histogram;
 	cv::Mat imgData;
+	static void BuildPlane(Image* image);
 	static void Histograms(Image* image);
 	static void UpdateTextureData(Image* image);
 	static void OTSU(double thresh, double maxValue, Image* image);
@@ -114,7 +115,10 @@ public:
 	static void MedianCut(int blocks, Image* image);
 	static void KMeans(int k, Image* image);
 	static void ColorReduce(int numBits, Image* image);
+	static void EqualizeHist(Image* image);
+	static void RemovePlane(Image* image);
 	static void Rotate(Image* image, float deg);
+	static void Flip(Image* image, int mode);
 	int width;
 	int height;
 	int channels;

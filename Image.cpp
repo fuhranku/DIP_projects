@@ -451,6 +451,25 @@ Image* Image::Any2Gray(Image* image) {
     return grayImg;
 }
 
+Image* Image::Any2YCrCb(Image* image) {
+    Image* ycrcbImg = image;
+    ycrcbImg->imgData = image->imgData.clone();
+    // Transform any kind of image to RGB
+    switch (image->channels) {
+    case 3:
+        cv::cvtColor(image->imgData, ycrcbImg->imgData, cv::COLOR_BGR2YCrCb);
+        break;
+    case 4:
+        cv::cvtColor(image->imgData, ycrcbImg->imgData, cv::COLOR_BGRA2BGR);
+        cv::cvtColor(ycrcbImg->imgData, ycrcbImg->imgData, cv::COLOR_BGR2YCrCb);
+        break;
+    }
+
+    ycrcbImg->imgData = image->imgData;
+
+    return ycrcbImg;
+}
+
 void Image::getFileExtension(std::string path) {
     size_t index = path.find_last_of(".");
     std::string extension = path.substr(index + 1);
@@ -506,17 +525,63 @@ void Image::Rotate(Image* image, float deg) {
     rot.at<double>(1, 2) += bbox.height / 2.0 - image->imgData.rows / 2.0;
 
     cv::warpAffine(image->imgData, image->imgData, rot, bbox.size());
+    
+    image->width = image->imgData.cols;
+    image->height = image->imgData.rows;
 
-    // Compute Histograms
-    Image::Histograms(image);
+    //cv::flip(image->imgData, image->imgData,0);
+    //cv::imshow("asdasd", image->imgData);
+
+    RemovePlane(image);
+    BuildPlane(image);
+
     // Update GPU Texture
     Image::UpdateTextureData(image);
     // Update history queue/stack
 }
 
-void Image::BuildPlane() {
+void Image::Flip(Image* image, int mode) {
+    cv::flip(image->imgData, image->imgData, mode);
 
-    float width = this->width, height = this->height;
+    // Compute Histograms
+    Image::Histograms(image);
+    // Update GPU Texture
+    Image::UpdateTextureData(image);
+}
+
+void Image::EqualizeHist(Image* image) {
+    //Convert the image from current space to YCrCb color space
+    Any2YCrCb(image);
+
+    //Split the image into 3 channels; Y, Cr and Cb channels respectively and store it in a std::vector
+    std::vector<cv::Mat> vec_channels;
+    split(image->imgData, vec_channels);
+
+    //Equalize the histogram of only the Y channel 
+    cv::equalizeHist(vec_channels[0], vec_channels[0]);
+
+    //Merge 3 channels in the vector to form the color image in YCrCB color space.
+    merge(vec_channels, image->imgData);
+
+    //Convert the histogram equalized image from YCrCb to BGR color space again
+    cvtColor(image->imgData, image->imgData, cv::COLOR_YCrCb2BGR);
+
+    // Compute Histograms
+    Image::Histograms(image);
+    // Update GPU Texture
+    Image::UpdateTextureData(image);
+}
+
+void Image::RemovePlane(Image *image) {
+    // Deletes the vertex array from the GPU
+    glDeleteVertexArrays(1, &image->VAO);
+    // Deletes the vertex object from the GPU
+    glDeleteBuffers(1, &image->VBO);
+}
+
+void Image::BuildPlane(Image *image) {
+
+    float width = image->width, height = image->height;
     float quadVertices[] = {
         // positions        // Color              // texture Coords
         -width / 2,  height / 2, 0.0f, 1.0f, 0.0f, 0.0f,  0.0f, 1.0f,
@@ -525,10 +590,10 @@ void Image::BuildPlane() {
          width / 2, -height / 2, 0.0f, 0.5f, 0.5f, 0.75f, 1.0f, 0.0f,
     };
     // Setup plane VAO
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glGenVertexArrays(1, &image->VAO);
+    glGenBuffers(1, &image->VBO);
+    glBindVertexArray(image->VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, image->VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
     // Position
     glEnableVertexAttribArray(0);

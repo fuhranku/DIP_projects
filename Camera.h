@@ -32,6 +32,7 @@ public:
     void moveRight(float time);
     void moveUp(float time);
     void moveDown(float time);
+    void moveDir(float time, glm::vec2 dir);
     void resize(int windowWidth, int windowHeight);
     float getUIZoom();
 private:

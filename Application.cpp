@@ -62,23 +62,38 @@ void Application::OnMouseButton(GLFWwindow* window, int button, int action, int 
         double xpos, ypos;
         // Step 0: 2d Viewport Coordinates
         glfwGetCursorPos(window, &xpos, &ypos);
-        // Step 1: 3d Normalised Device Coordinates
-        float x = (2.0f * xpos) / windowWidth - 1.0f;
-        float y = 1.0f - (2.0f * ypos) / windowHeight;
-        float z = 1.0f;
-        glm::vec3 ray_nds = glm::vec3(x, y, z);
-        //std::cout << "Cursor Position at (" << x << " : " << y << ")" << std::endl;
-        // Step 2: 4d Homogeneous Clip Coordinates
-        glm::vec4 ray_clip = glm::vec4(glm::vec2(ray_nds.x, ray_nds.y), -1.0, 1.0);
-        // Step 3: 4d Eye (Camera) Coordinates
-        glm::vec4 ray_eye = glm::inverse(camera.getOrthoMatrix()) * ray_clip;
-        ray_eye = glm::vec4(glm::vec2(ray_eye.x, ray_eye.y), -1.0, 0.0);
-        // Step 4: 4d World Coordinates
-        glm::vec4 temp = (glm::inverse(camera.getWorldToViewMatrix()) * ray_eye);
-        glm::vec3 ray_wor = glm::vec3(temp.x, temp.y, temp.z);
-        //ray_wor = glm::normalize(ray_wor);
+        
+        // Step 1: From Screen Space to Clip Space
+        float mouse_pos_x_clip = xpos / (windowWidth * 0.8f) * 2 - 1;
+        float mouse_pos_y_clip = ypos / windowHeight * 2 - 1;
 
-        //printf("(%f,%f,%f)\n", ray_wor.x, ray_wor.y, ray_wor.z);
+        glm::vec4 mouse_pos_near_clip = glm::vec4(mouse_pos_x_clip, mouse_pos_y_clip, -1, 1);
+        glm::vec4 mouse_pos_far_clip = glm::vec4(mouse_pos_x_clip, mouse_pos_y_clip, 1, 1);
+
+        // Step 2: Compute inverse view and projection matrices
+        glm::mat4 M_wv = camera.getWorldToViewMatrix();
+        glm::mat4 M_vc = camera.getOrthoMatrix();
+
+        glm::mat4 M_vw = glm::inverse(M_wv);
+        glm::mat4 M_cv = glm::inverse(M_vc);
+
+        // Step 3: From Clip to View Space
+        glm::vec4 mouse_pos_near_view = M_cv * mouse_pos_near_clip;
+        glm::vec4 mouse_pos_far_view = M_cv * mouse_pos_far_clip;
+
+        // Step 4: From View to World Space
+        glm::vec4 mouse_pos_near_world = M_vw * mouse_pos_near_view;
+        glm::vec4 mouse_pos_far_world = M_vw * mouse_pos_far_view;
+
+        printf("(%f,%f,%f)\n", mouse_pos_near_world.x
+                             , mouse_pos_near_world.y
+                             , mouse_pos_near_world.z);
+
+        printf("(%f,%f,%f)\n", mouse_pos_far_world.x
+                             , mouse_pos_far_world.y
+                             , mouse_pos_far_world.z);
+
+
     }
 }
 
@@ -112,7 +127,7 @@ void Application::OnKeyPress(GLFWwindow* window, int key, int scancode, int acti
             Application::ExportImage(path.c_str(), Application::GetInstance()->image);
             Application::GetInstance()->ui.activeModal = "Success##saved_modal";
         }
-    }    
+    } 
 }
 
 void Application::OnMouseScroll(GLFWwindow* window, double posX, double posY) {
@@ -164,6 +179,23 @@ void Application::ProcessKeyboardInput(GLFWwindow* window)
         glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) != GLFW_PRESS) {
         camera.moveDown(deltaTime);
     }
+
+    if (glfwGetKey(window, GLFW_KEY_SPACE)                  == GLFW_PRESS &&
+        glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)  == GLFW_PRESS &&
+        imageLoaded) {
+
+        double xpos, ypos;
+        lastMousePos = currentMousePos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+        currentMousePos.x = xpos - windowWidth/2;
+        currentMousePos.y = ypos - windowHeight/2;
+
+        camera.moveDir(deltaTime, glm::vec2(xpos - lastMousePos.x,
+                                            ypos - lastMousePos.y));
+    }
+    else {
+    }
+
 }
 
 void Application::CalcDeltaTime() {
@@ -194,7 +226,7 @@ void Application::OpenImage(char* path, int colorSpace) {
     app->imageLoaded = true;
 
     // Create Plane with Image Resolution
-    app->image->BuildPlane();
+    Image::BuildPlane(app->image);
 
     // Initialize grid data
     app->InitGrid();

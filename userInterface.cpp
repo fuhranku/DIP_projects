@@ -134,6 +134,43 @@ void UI::drawTopMenu() {
 		}
 		popDisable(!Application::GetInstance()->imageLoaded);
 
+		pushDisable(!Application::GetInstance()->imageLoaded);
+		if (ImGui::BeginMenu("Image"))
+		{
+			if (ImGui::BeginMenu("Image Rotation")) {
+				if (ImGui::MenuItem("180 degree")) {
+					Image::Rotate(Application::GetInstance()->image, 180);
+				}
+				if (ImGui::MenuItem("90 degree Clockwise")) {
+					Image::Rotate(Application::GetInstance()->image, 90);
+				}
+				if (ImGui::MenuItem("90 degree Counter Clockwise")) {
+					Image::Rotate(Application::GetInstance()->image, -90);
+				}
+				if (ImGui::MenuItem("Arbitrary...")) {
+					activeModal = "Rotate Canvas##arb_rot_modal";
+				}
+
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("Flip Canvas Horizontal")) {
+					Image::Flip(Application::GetInstance()->image, 1);
+				}
+				if (ImGui::MenuItem("Flip Canvas Vertical")) {
+					Image::Flip(Application::GetInstance()->image, 0);
+				}
+
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::MenuItem("Equalize Histogram")) {
+				Image::EqualizeHist(Application::GetInstance()->image);
+			}
+
+			ImGui::EndMenu();
+		}
+		popDisable(!Application::GetInstance()->imageLoaded);
+
 		ImGui::EndMainMenuBar();
 	}
 }
@@ -416,6 +453,34 @@ void UI::drawModals() {
 			ImGui::CloseCurrentPopup();
 			activeModal = "";
 		}
+		ImGui::EndPopup();
+	}
+
+	// Arbitrary rotation modal
+	ImGui::SetNextWindowSize(ImVec2(300, 150));
+	if (ImGui::BeginPopupModal("Rotate Canvas##arb_rot_modal"))
+	{
+		static float deg = 90;
+		ImGui::Text("Angle");
+		ImGui::SameLine();
+		ImGui::DragFloat("##angle", &deg, 0.005f, -359.99f, 359.99f, "%.2f");
+
+
+		static int label = 0;
+		ImGui::RadioButton("Clockwisew##cw", &label, 1);
+		ImGui::RadioButton("Counter\nClockwisew##ccw", &label, -1);
+
+		if (ImGui::Button("OK", ImVec2(80, 30))) {
+			Image::Rotate(Application::GetInstance()->image, deg*label);
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(80, 30))) {
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+
 		ImGui::EndPopup();
 	}
 }

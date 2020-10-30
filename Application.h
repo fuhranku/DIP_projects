@@ -23,6 +23,8 @@ class Application {
 	float lastTime = 0;
 	float currentTime = 0;
 	float totalTime = 0;
+	glm::vec2 currentMousePos = glm::vec2(0,0);
+	glm::vec2 lastMousePos;
 	int totalFrames = 0;
 	int fps = 0;
 	GLFWwindow* window; // Window pointer
