@@ -1,6 +1,6 @@
 #include "Canvas.h"
 
-Canvas::Canvas() {
+Canvas::Canvas(){
     VAO = 0;   
     VBO = 0;
     width = 0;
@@ -10,13 +10,17 @@ Canvas::Canvas() {
 void Canvas::Build(int width, int height) {
     this->width = width;
     this->height = height;
+
+    float halfWidth = this->width / 2;
+    float halfHeight = this->height / 2;
+
     vertices = 
     {
         // positions                              // texture Coords
-        -this->width / 2,  this->height / 2, 0.0f, 0.0f, 1.0f,
-        -this->width / 2, -this->height / 2, 0.0f, 0.0f, 0.0f,
-         this->width / 2,  this->height / 2, 0.0f, 1.0f, 1.0f,
-         this->width / 2, -this->height / 2, 0.0f, 1.0f, 0.0f,
+        -halfWidth,  halfHeight, 0.0f, 0.0f, 1.0f,
+        -halfWidth, -halfHeight, 0.0f, 0.0f, 0.0f,
+         halfWidth,  halfHeight, 0.0f, 1.0f, 1.0f,
+         halfWidth, -halfHeight, 0.0f, 1.0f, 0.0f,
     };
 
     // Setup plane VAO
@@ -50,6 +54,10 @@ void Canvas::Update(int width, int height) {
     Build(width, height);
 }
 
+Grid::Grid() {
+
+}
+
 Grid::Grid(int width, int height){ 
     // Load Grid Shader
     gridShader = new Shader("assets/shaders/gridShader.vert", "assets/shaders/gridShader.frag");
@@ -57,19 +65,19 @@ Grid::Grid(int width, int height){
     std::vector<glm::vec3> vertices;
     std::vector<glm::uvec4> indices;
 
-    for (int j = -(image->height / 2); j <= image->height / 2; ++j) {
-        for (int i = -(image->width / 2); i <= image->width / 2; ++i) {
+    for (int j = -(height / 2); j <= height / 2; ++j) {
+        for (int i = -(width / 2); i <= width / 2; ++i) {
             float x = (float)i;
             float y = (float)j;
-            vertices.push_back(glm::vec3(x, y, 0.015));
+            vertices.push_back(glm::vec3(x, y, 0.014));
         }
     }
 
-    for (int j = 0; j < image->height; ++j) {
-        for (int i = 0; i < image->width; ++i) {
+    for (int j = 0; j < height; ++j) {
+        for (int i = 0; i < width; ++i) {
 
-            int row1 = j * (image->width + 1);
-            int row2 = (j + 1) * (image->width + 1);
+            int row1 = j * (width + 1);
+            int row2 = (j + 1) * (width + 1);
 
             indices.push_back(glm::uvec4(row1 + i, row1 + i + 1, row1 + i + 1, row2 + i + 1));
             indices.push_back(glm::uvec4(row2 + i + 1, row2 + i, row2 + i, row1 + i));
@@ -96,11 +104,11 @@ Grid::Grid(int width, int height){
     gridLength = (GLuint)indices.size() * 4;
 }
 
-void Grid::Draw(){ 
+void Grid::Draw(glm::mat4 viewMatrix, glm::mat4 orthoMatrix){
     gridShader->use();
     gridShader->setMat4("model", glm::mat4(1.0f));
-    gridShader->setMat4("view", camera.viewMatrix);
-    gridShader->setMat4("projection", camera.getOrthoMatrix());
+    gridShader->setMat4("view", viewMatrix);
+    gridShader->setMat4("projection", orthoMatrix);
 
     glBindVertexArray(gridVAO);
 

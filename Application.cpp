@@ -228,9 +228,6 @@ void Application::OpenImage(char* path, int colorSpace) {
     if (app->image->imgData.empty()) return;
     // Let software know we have a loaded image now
     app->imageLoaded = true;
-
-    // Initialize grid data
-    app->InitGrid();
 }
 
 bool Application::WindowsPathGetter(std::string &path, int operation) {
@@ -378,10 +375,10 @@ void Application::drawGrid() {
     // Don't draw if no image is loaded
     if (!imageLoaded) return;
 
-    // Draw when zoom reaches this point
-    if (camera.getUIZoom() < 1000.0f) return;
+    //// Draw when zoom reaches this point
+    //if (camera.getUIZoom() < 1000.0f) return;
 
-    image->canvas.grid.Draw();
+    image->canvas.grid.Draw(camera.getWorldToViewMatrix(), camera.getOrthoMatrix());
 }
 
 
