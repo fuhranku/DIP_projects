@@ -460,6 +460,21 @@ void Image::UpdateTextureData(Image* image) {
 
 void Image::Rotate(Image* image, float deg) {
 
+    cv::Point2f center((image->imgData.cols - 1) / 2.0, (image->imgData.rows - 1) / 2.0);
+    cv::Mat rot = cv::getRotationMatrix2D(center, deg, 1.0);
+    // determine bounding rectangle, center not relevant
+    cv::Rect2f bbox = cv::RotatedRect(cv::Point2f(), image->imgData.size(), deg).boundingRect2f();
+    // adjust transformation matrix
+    rot.at<double>(0, 2) += bbox.width / 2.0 - image->imgData.cols / 2.0;
+    rot.at<double>(1, 2) += bbox.height / 2.0 - image->imgData.rows / 2.0;
+
+    cv::warpAffine(image->imgData, image->imgData, rot, bbox.size());
+
+    // Compute Histograms
+    Image::Histograms(image);
+    // Update GPU Texture
+    Image::UpdateTextureData(image);
+    // Update history queue/stack
 }
 
 void Image::BuildPlane() {
