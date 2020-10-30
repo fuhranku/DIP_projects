@@ -221,7 +221,9 @@ void Image::OTSU(double thresh, double maxValue, Image* image){
     // Update GPU Texture
     Image::UpdateTextureData(image);
     // History code here
+    image->history._do(image, THRESHOLD_OTSU);
 }
+
 
 void Image::GaussianAdaptiveThreshold(double thresh, double maxValue, Image* image){
     // Transform image to Grayscale (if applies)
@@ -604,4 +606,33 @@ void Image::BuildPlane(Image *image) {
     // Texture Coords
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+}
+
+void Image::Undo(Image* image) {
+    //Pop action from do stack
+    Action* action = image->history._undo();
+
+    if (action) {
+        //Update image data
+        image->imgData = action->imgData;
+        image->width = action->width;
+        image->height = action->height;
+        image->channels = action->channels;
+        image->bitDepth = action->bitDepth;
+        image->dpi = action->dpi;
+        image->size = action->size;
+        image->ext = action->ext;
+        image->path = action->path;
+        image->format = action->format;
+        image->internalFormat = action->internalFormat;
+
+        //Recreate Plane
+        RemovePlane(image);
+        BuildPlane(image);
+
+        // Compute Histograms
+        Histograms(image);
+        // Update GPU Texture
+        UpdateTextureData(image);
+    }
 }

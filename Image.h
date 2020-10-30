@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <numeric>
 #include <string>
+#include "History.h"
 
 #define IMG_BMP 0x0001
 #define IMG_JPG 0x0002
@@ -107,6 +108,8 @@ public:
 	unsigned int VBO;
 	std::vector<Histogram> histogram;
 	cv::Mat imgData;
+	History history;
+
 	static void BuildPlane(Image* image);
 	static void Histograms(Image* image);
 	static void UpdateTextureData(Image* image);
@@ -119,6 +122,7 @@ public:
 	static void RemovePlane(Image* image);
 	static void Rotate(Image* image, float deg);
 	static void Flip(Image* image, int mode);
+	static void Undo(Image* image);
 	int width;
 	int height;
 	int channels;
