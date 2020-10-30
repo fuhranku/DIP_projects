@@ -52,7 +52,10 @@ public:
 	bool imageLoaded = false;
 	static Application* GetInstance();
 	static void OpenImage(char* path, int colorSpace);
-	static std::string WindowsPathGetter();
+	static bool WindowsPathGetter(std::string &path, int operation);
+	static void UpdateImageOnDisk(Image* image);
+	static bool ExportImage(const char* path, Image* image);
+	static int getExtension(const char* path);
 	void drawGrid();
 	void drawImage();
 	void Render();

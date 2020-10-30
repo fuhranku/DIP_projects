@@ -1,9 +1,6 @@
 #include "Image.h"
 
-//std::vector<rgbColor> Image::medianCutOut;
-
 Image::Image() {
-
 }
 
 Image::Image(const char *path) {
@@ -13,10 +10,22 @@ Image::Image(const char *path) {
     //std::cout << imgData.channels() << std::endl;
 
     if (!imgData.empty()) {
+        // Save path string
+        this->path = path;
+
+        // Compute file extension
+        getFileExtension(path);
+
+
+        // Create textures
         glGenTextures(1, &id);
         width = imgData.cols;
         height = imgData.rows;
         channels = imgData.channels();
+
+        // Compute DPI
+        dpi = (int)glm::round((float)width * 25.4 / (float)(width * 0.264583));
+
         // Compute Histogram
         Image::Histograms(this);
         cv::flip(imgData, imgData, 0);
@@ -62,30 +71,44 @@ Image::Image(const char *path) {
 Image::Image(const char* path, int colorSpace) {
     // Creates the texture on GPU
     switch (colorSpace) {
-    // Inherit from image
-    case 0:
-        imgData = cv::imread(path, cv::IMREAD_UNCHANGED);
-        break;
-    // Force to grayscale
-    case 1:
-        imgData = cv::imread(path, cv::IMREAD_GRAYSCALE);
-        break;
-    // Force to BGR
-    case 2:
-        imgData = cv::imread(path, cv::IMREAD_COLOR);
-        break;
-     // Force to BGRA
-    case 3:
-        imgData = cv::imread(path, cv::IMREAD_COLOR);
-        cv::cvtColor(imgData, imgData, cv::COLOR_BGR2BGRA);
-        break;
+        // Inherit from image
+        case 0:
+            imgData = cv::imread(path, cv::IMREAD_UNCHANGED);
+            break;
+        // Force to grayscale
+        case 1:
+            imgData = cv::imread(path, cv::IMREAD_GRAYSCALE);
+            break;
+        // Force to BGR
+        case 2:
+            imgData = cv::imread(path, cv::IMREAD_COLOR);
+            break;
+         // Force to BGRA
+        case 3:
+            imgData = cv::imread(path, cv::IMREAD_COLOR);
+            cv::cvtColor(imgData, imgData, cv::COLOR_BGR2BGRA);
+            break;
     }
 
     if (!imgData.empty()) {
+        // Save path string
+        this->path = path;
+
+        // Compute file extension
+        getFileExtension(path);
+
+        // Create textures
         glGenTextures(1, &id);
         width = imgData.cols;
         height = imgData.rows;
         channels = imgData.channels();
+
+        // Compute Size
+        size = Size(width*height, channels);
+
+        // Compute DPI
+        dpi = (int)glm::round((float)width * 25.4 / (float)(height * 0.264583));
+
         // Compute Histogram
         Image::Histograms(this);
         cv::flip(imgData, imgData, 0);
@@ -246,7 +269,6 @@ void Image::KMeans(int k, Image* image) {
     Image::UpdateTextureData(image);
     // History code here
 }
-
 
 unsigned int Image::findBiggestRange(std::vector<bgrColor> color) {
     // Iterate over R,G and B histograms to find min and max values
@@ -427,6 +449,21 @@ Image* Image::Any2Gray(Image* image) {
     grayImg->channels = 1;
 
     return grayImg;
+}
+
+void Image::getFileExtension(std::string path) {
+    size_t index = path.find_last_of(".");
+    std::string extension = path.substr(index + 1);
+    if (extension == "jpeg" | extension == "jpg" | extension == "jpe")
+        ext = Extension(IMG_JPG, "JPEG file");
+    else if (extension == "bmp" | extension == "dib")
+        ext = Extension(IMG_BMP, "Windows bitmaps");
+    else if (extension == "png")
+        ext = Extension(IMG_PNG, "Portable Network Graphics");
+    else if (extension == "webp")
+        ext = Extension(IMG_WEBP, "WebP file");
+    else if (extension == "tiff" | extension == "tif")
+        ext = Extension(IMG_TIFF, "TIFF file");
 }
 
 void Image::ColorReduce(int numBits, Image* image) {
