@@ -203,8 +203,8 @@ void Application::UpdateCursorPos() {
     lastMousePos.x = currentMousePos.x;
     lastMousePos.y = currentMousePos.y;
     glfwGetCursorPos(window, &xpos, &ypos);
-    currentMousePos.x = xpos - windowWidth * 0.8f / 2;
-    currentMousePos.y = ypos - windowHeight / 2;
+    currentMousePos.x = xpos - (double)(windowWidth * 0.8f / 2.0f);
+    currentMousePos.y = ypos - (double)(windowHeight / 2.0f);
 }
 
 void Application::CalcDeltaTime() {
