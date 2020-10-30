@@ -93,15 +93,16 @@ void UI::drawTopMenu() {
 			}
 			pushDisable(!Application::GetInstance()->imageLoaded);
 			if (ImGui::MenuItem("Save","ctrl + S")) {
-				Application::UpdateImageOnDisk(Application::GetInstance()->image);
-				activeModal = "Success##saved_modal";
+				activeModal = "Confirm overwrite##confirm_overwrite_save";
 			}
 			popDisable(!Application::GetInstance()->imageLoaded);
 			pushDisable(!Application::GetInstance()->imageLoaded);
 			if (ImGui::MenuItem("Export As", "ctrl + shift + S")) {
-				static char buffer[1024];
-				strcpy_s(buffer, Application::WindowsPathGetter(1).c_str());
-				Application::ExportImage(buffer);
+				std::string path;
+				if (Application::WindowsPathGetter(path, 1)) {
+					Application::ExportImage(path.c_str(),Application::GetInstance()->image);
+					activeModal = "Success##saved_modal";
+				}
 			}
 			popDisable(!Application::GetInstance()->imageLoaded);
 			ImGui::EndMenu();
@@ -313,7 +314,7 @@ void UI::drawModals() {
 	{
 		ImGui::Text("Please, set k");
 
-		static int k = 16;
+		static int k = 4;
 
 		ImGui::DragInt("##k_val", &k, 1, 1, 256);
 
@@ -352,13 +353,20 @@ void UI::drawModals() {
 		ImGui::InputText("##load_image", buffer, IM_ARRAYSIZE(buffer));
 		ImGui::SameLine();
 		if (ImGui::Button("...##load_image_btn", ImVec2(60, 20))) {
-			strcpy_s(buffer, Application::WindowsPathGetter(0).c_str());
+			std::string path;
+			if (Application::WindowsPathGetter(path, 0))
+				strcpy_s(buffer, path.c_str());
 		}
 
 		if (ImGui::Button("Load", ImVec2(80, 30))) {
 			Application::OpenImage(buffer, color_space_option);
 			ImGui::CloseCurrentPopup();
-			activeModal = "";
+			if (!Application::GetInstance()->imageLoaded) {
+				strcpy_s(buffer, "./assets/textures/landscape1.jpg");
+				activeModal = "Error##error_modal";
+			}
+			else
+				activeModal = "";
 		}
 
 		ImGui::SameLine();
@@ -372,9 +380,38 @@ void UI::drawModals() {
 		ImGui::EndPopup();
 	}
 
+	// Confirm Overwrite modal
+	ImGui::SetNextWindowSize(ImVec2(300, 150));
+	if (ImGui::BeginPopupModal("Confirm overwrite##confirm_overwrite_save")) {
+		ImGui::Text("Do you want to overwrite your image?");
+		if (ImGui::Button("Confirm", ImVec2(80, 30))) {
+			ImGui::CloseCurrentPopup();
+			Application::UpdateImageOnDisk(Application::GetInstance()->image);
+			activeModal = "";
+		}
+		if (ImGui::Button("Cancel", ImVec2(80, 30)))
+		{
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+		ImGui::EndPopup();
+	}
+	// Success operation modal
 	ImGui::SetNextWindowSize(ImVec2(150, 100));
 	if (ImGui::BeginPopupModal("Success##saved_modal")) {
-		ImGui::Text("Saved succesfully!");
+		ImGui::Text("Success on\nlast operation!");
+		if (ImGui::Button("OK", ImVec2(80, 30))) {
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+		ImGui::EndPopup();
+	}
+
+
+	// Error operation modal
+	ImGui::SetNextWindowSize(ImVec2(150, 100));
+	if (ImGui::BeginPopupModal("Error##error_modal")) {
+		ImGui::Text("Error on\nlast operation");
 		if (ImGui::Button("OK", ImVec2(80, 30))) {
 			ImGui::CloseCurrentPopup();
 			activeModal = "";

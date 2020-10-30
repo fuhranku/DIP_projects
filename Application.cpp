@@ -78,8 +78,7 @@ void Application::OnMouseButton(GLFWwindow* window, int button, int action, int 
         glm::vec3 ray_wor = glm::vec3(temp.x, temp.y, temp.z);
         //ray_wor = glm::normalize(ray_wor);
 
-        printf("(%f,%f,%f)\n", ray_wor.x, ray_wor.y, ray_wor.z);
-
+        //printf("(%f,%f,%f)\n", ray_wor.x, ray_wor.y, ray_wor.z);
     }
 }
 
@@ -108,7 +107,11 @@ void Application::OnKeyPress(GLFWwindow* window, int key, int scancode, int acti
         glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS &&
         glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)   == GLFW_PRESS &&
         Application::GetInstance()->imageLoaded) {
-        Application::GetInstance()->ui.activeModal = "Export As##export_as";
+        std::string path;
+        if (Application::WindowsPathGetter(path, 1)) {
+            Application::ExportImage(path.c_str(), Application::GetInstance()->image);
+            Application::GetInstance()->ui.activeModal = "Success##saved_modal";
+        }
     }    
 }
 
@@ -185,6 +188,9 @@ void Application::CalcDeltaTime() {
 void Application::OpenImage(char* path, int colorSpace) {
     Application* app = Application::GetInstance();
     app->image = new Image(path, colorSpace);
+
+    if (app->image->imgData.empty()) return;
+    // Let software know we have a loaded image now
     app->imageLoaded = true;
 
     // Create Plane with Image Resolution
@@ -194,7 +200,7 @@ void Application::OpenImage(char* path, int colorSpace) {
     app->InitGrid();
 }
 
-std::string Application::WindowsPathGetter(int operation) {
+bool Application::WindowsPathGetter(std::string &path, int operation) {
     OPENFILENAME ofn;
     char fileName[MAX_PATH] = "";
     ZeroMemory(&ofn, sizeof(ofn));
@@ -203,10 +209,30 @@ std::string Application::WindowsPathGetter(int operation) {
     ofn.lpstrFile = fileName;
     ofn.nMaxFile = MAX_PATH;
     ofn.lpstrDefExt = "";
-    std::string path;
+    if (operation == 0) {
+        ofn.lpstrFilter =
+            "All files *.* \0"
+            "*.*\0"
+            "JPEG files (*.jpg;*.jpeg;*.jpe)\0"
+            "*.jpg;*.jpeg;*.jpe\0"
+            "Portable Network Graphics (*.png)\0"
+            "*.png\0"
+            "Windows bitmaps (*.bmp;*.dib)\0"
+            "*.bmp;*.dib\0"
+            "TIFF (*.tiff;*.tif)\0"
+            "*.tiff;*.tif\0"
+            "WebP (*.webp)\0"
+            "*.webp\0";
+        ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_NOCHANGEDIR;
+        if (GetOpenFileName(&ofn))
+            path = fileName;
+        else
+            return false;
+    }
+    else {
     ofn.lpstrFilter = 
-        "JPEG files (*.jpeg;*.jpg;*.jpe)\0"
-        "*.jpeg;*.jpg;*.jpe\0"
+        "JPEG files (*.jpg;*.jpeg;*.jpe)\0"
+        "*.jpg;*.jpeg;*.jpe\0"
         "Portable Network Graphics (*.png)\0"
         "*.png\0"
         "Windows bitmaps (*.bmp;*.dib)\0"
@@ -215,28 +241,58 @@ std::string Application::WindowsPathGetter(int operation) {
         "*.tiff;*.tif\0"
         "WebP (*.webp)\0"
         "*.webp\0";
-    if (operation == 0) {
-        ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_NOCHANGEDIR;
-        if (GetOpenFileName(&ofn))
-            path = fileName;
-    }
-    else {
         ofn.Flags = OFN_EXPLORER | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
         if (GetSaveFileName(&ofn))
             path = fileName;
+        else
+            return false;
     }
-    return path; 
+    return true; 
 }
 
-void Application::ExportImage(const char* path) {
+bool Application::ExportImage(const char* path, Image* image) {
+    if (path == "") return false;
+    cv::Mat flippedImg = image->imgData.clone();
+    cv::flip(flippedImg, flippedImg, 0);
+    switch (Application::getExtension(path)) {
+    case IMG_JPG:
+        cv::imwrite(path, flippedImg, { cv::IMWRITE_JPEG_QUALITY, 95 });
+        break;
+    case IMG_BMP:
+        cv::imwrite(path, flippedImg);
+        break;
+    case IMG_PNG:
+        cv::imwrite(path, flippedImg, { cv::IMWRITE_PNG_COMPRESSION, 4 });
+        break;
+    case IMG_TIFF:
+        cv::imwrite(path, flippedImg, { cv::IMWRITE_TIFF_COMPRESSION });
+        break;
+    case IMG_WEBP:
+        cv::imwrite(path, flippedImg, { cv::IMWRITE_WEBP_QUALITY, 100 });
+        break;
+    }
+    //if (!cv::imwrite(path, flippedImg)) {
+    //    std::cout << "Error when saving" << std::endl;
+    //    return false;
+    //}
+    return true;
 
 }
-
 
 void Application::UpdateImageOnDisk(Image* image) {
     cv::Mat flippedImg = image->imgData.clone();
     cv::flip(flippedImg, flippedImg, 0);
     cv::imwrite(image->path, flippedImg);
+}
+
+int Application::getExtension(const char* path) {
+    // Get extension from path string
+    std::string ext = std::string(path).substr(std::string(path).find_last_of('.') + 1);
+    if (ext == "jpeg" || ext == "jpg" || ext == "jpe") return IMG_JPG;
+    if (ext == "png") return IMG_PNG;
+    if (ext == "bmp"  || ext == "dib") return IMG_BMP;
+    if (ext == "tiff" || ext == "tif") return IMG_TIFF;
+    if (ext == "webp" ) return IMG_WEBP;
 }
 
 /**
