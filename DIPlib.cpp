@@ -389,6 +389,9 @@ void DIPlib::EqualizeHist(Image* image) {
 }
 
 void DIPlib::DFT(Image* image) {
+
+    Any2Gray(image);
+
     /* Performance of DFT calculation is better for some array size.
     It is fastest when array size is power of two.
     The arrays whose size is a product of 2’s, 3’s, and 5’s are also processed quite efficiently. */
@@ -407,13 +410,12 @@ void DIPlib::DFT(Image* image) {
                        cv::BORDER_CONSTANT,
                        cv::Scalar::all(0)
                    );
-    cv::Mat plane0;
-    padded.convertTo(plane0, CV_32F);
-    cv::Mat plane1 = cv::Mat::zeros(padded.rows, padded.cols, CV_32F);
-    std::vector<cv::Mat> planes = { plane0, plane1};
+    cv::Mat planes[2];
+    padded.convertTo(planes[0], CV_32F);
+    planes[1] = cv::Mat::zeros(padded.rows, padded.cols, CV_32F);
     cv::Mat complexI;
     // Add to the expanded another plane with zeros
-    cv::merge(planes, complexI);         
+    cv::merge(planes,2, complexI);         
     // this way the result may fit in the source matrix
     cv::dft(complexI,complexI);
     // compute the magnitude and switch to logarithmic scale
@@ -448,7 +450,6 @@ void DIPlib::DFT(Image* image) {
     normalize(magI, magI, 0, 1, cv::NORM_MINMAX); 
 
     //image->imgData = magI.clone();
-    //image->channels = 1;
 
     cv::imshow("DFT",magI);
 
