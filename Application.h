@@ -1,5 +1,4 @@
 #pragma once
-#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <glad/glad.h> // Glad has to be include before glfw
 #include <GLFW/glfw3.h>
@@ -14,8 +13,9 @@
 #include "Shader.h"
 #include "Image.h"
 #include "Camera.h"
-#include "History.h"
 #include "Windows.h"
+#include "History.h"
+#include "DIPlib.h"
 
 class Application {
 
@@ -30,7 +30,6 @@ class Application {
 	GLFWwindow* window; // Window pointer
 	Shader *shader; // Shader object
 	UI ui; // User Interface 
-	History history;
 
 private:
 	static Application* _application;

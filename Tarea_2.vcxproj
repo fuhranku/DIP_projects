@@ -140,6 +140,7 @@
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Canvas.cpp" />
+    <ClCompile Include="DIPlib.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="History.cpp" />
     <ClCompile Include="Image.cpp" />
@@ -158,8 +159,10 @@
   <ItemGroup>
     <ClInclude Include="Action.h" />
     <ClInclude Include="Application.h" />
+    <ClInclude Include="BGRColor.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Canvas.h" />
+    <ClInclude Include="DIPlib.h" />
     <ClInclude Include="History.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="Shader.h" />
@@ -168,6 +171,8 @@
   <ItemGroup>
     <None Include="assets\shaders\basic.frag" />
     <None Include="assets\shaders\basic.vert" />
+    <None Include="assets\shaders\gridShader.frag" />
+    <None Include="assets\shaders\gridShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

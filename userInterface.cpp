@@ -90,6 +90,8 @@ void UI::drawTopMenu() {
 			}
 			if (ImGui::MenuItem("Open Image","ctrl + O")) {
 				activeModal = "Open Image##open_image";
+				History::_redoStack = std::stack<Action*>();
+				History::_undoStack = std::stack<Action*>();
 			}
 			pushDisable(!Application::GetInstance()->imageLoaded);
 			if (ImGui::MenuItem("Save","ctrl + S")) {
@@ -139,13 +141,25 @@ void UI::drawTopMenu() {
 		{
 			if (ImGui::BeginMenu("Image Rotation")) {
 				if (ImGui::MenuItem("180 degree")) {
-					Image::Rotate(Application::GetInstance()->image, 180);
+					// Save current Action on history
+					Application::GetInstance()->image->currentFilter = IMG_TRANSFORM_ROTATE;
+					History::PushAction(Application::GetInstance()->image);
+					// Perform Action
+					DIPlib::Rotate(Application::GetInstance()->image, 180);
 				}
 				if (ImGui::MenuItem("90 degree Clockwise")) {
-					Image::Rotate(Application::GetInstance()->image, 90);
+					// Save current Action on history
+					Application::GetInstance()->image->currentFilter = IMG_TRANSFORM_ROTATE;
+					History::PushAction(Application::GetInstance()->image);
+					// Perform Action
+					DIPlib::Rotate(Application::GetInstance()->image, 90);
 				}
 				if (ImGui::MenuItem("90 degree Counter Clockwise")) {
-					Image::Rotate(Application::GetInstance()->image, -90);
+					// Save current Action on history
+					Application::GetInstance()->image->currentFilter = IMG_TRANSFORM_ROTATE;
+					History::PushAction(Application::GetInstance()->image);
+					// Perform Action
+					DIPlib::Rotate(Application::GetInstance()->image, -90);
 				}
 				if (ImGui::MenuItem("Arbitrary...")) {
 					activeModal = "Rotate Canvas##arb_rot_modal";
@@ -154,17 +168,29 @@ void UI::drawTopMenu() {
 				ImGui::Separator();
 
 				if (ImGui::MenuItem("Flip Canvas Horizontal")) {
-					Image::Flip(Application::GetInstance()->image, 1);
+					// Save current Action on history
+					Application::GetInstance()->image->currentFilter = IMG_TRANSFORM_FLIP;
+					History::PushAction(Application::GetInstance()->image);
+					// Perform Action
+					DIPlib::Flip(Application::GetInstance()->image, 1);
 				}
 				if (ImGui::MenuItem("Flip Canvas Vertical")) {
-					Image::Flip(Application::GetInstance()->image, 0);
+					// Save current Action on history
+					Application::GetInstance()->image->currentFilter = IMG_TRANSFORM_FLIP;
+					History::PushAction(Application::GetInstance()->image);
+					// Perform Action
+					DIPlib::Flip(Application::GetInstance()->image, 0);
 				}
 
 				ImGui::EndMenu();
 			}
 
 			if (ImGui::MenuItem("Equalize Histogram")) {
-				Image::EqualizeHist(Application::GetInstance()->image);
+				// Save current Action on history
+				Application::GetInstance()->image->currentFilter = IMG_HISTOGRAM_EQUALIZATION;
+				History::PushAction(Application::GetInstance()->image);
+				// Perform Action
+				DIPlib::EqualizeHist(Application::GetInstance()->image);
 			}
 
 			ImGui::EndMenu();
@@ -200,6 +226,20 @@ void UI::drawBottomMenu() {
 		ImGui::SameLine();
 		ImGui::Dummy(ImVec2(100.0f, 0.0f));
 		ImGui::SameLine();
+		bool stackBool = History::GetInstance()->_undoStack.size() == 0;
+		pushDisable(stackBool);
+		if (ImGui::ArrowButton("##Undo", ImGuiDir_Left)) {
+			History::_undo(Application::GetInstance()->image);
+		}
+		popDisable(stackBool);
+		ImGui::SameLine();
+		stackBool = History::GetInstance()->_redoStack.size() == 0;
+		pushDisable(stackBool);
+		if (ImGui::ArrowButton("##Redo", ImGuiDir_Right)) {
+			History::_redo(Application::GetInstance()->image);
+		}
+		popDisable(stackBool);
+
 	}
 
 	ImGui::End();
@@ -226,7 +266,11 @@ void UI::drawModals() {
 
 
 		if (ImGui::Button("Apply", ImVec2(80, 30))) {
-			Image::OTSU(thresh, maxValue, Application::GetInstance()->image);
+			// Save current Action on history
+			Application::GetInstance()->image->currentFilter = IMG_THRESHOLD_OTSU;
+			History::PushAction(Application::GetInstance()->image);
+			// Perform Action
+			DIPlib::OTSU(thresh, maxValue, Application::GetInstance()->image);
 			ImGui::CloseCurrentPopup();
 			activeModal = "";
 		}
@@ -253,8 +297,11 @@ void UI::drawModals() {
 		ImGui::DragFloat("Max Value", &maxValue, 0.05f, 0.0f, 255.0f, "%.2f");
 
 		if (ImGui::Button("Apply", ImVec2(80, 30))) {
-			cv::Mat img = Application::GetInstance()->image->imgData;
-			Image::GaussianAdaptiveThreshold(thresh, maxValue, Application::GetInstance()->image);
+			// Save current Action on history
+			Application::GetInstance()->image->currentFilter = IMG_THRESHOLD_GAUSSIAN;
+			History::PushAction(Application::GetInstance()->image);
+			// Perform Action
+			DIPlib::GaussianAdaptiveThreshold(thresh, maxValue, Application::GetInstance()->image);
 			ImGui::CloseCurrentPopup();
 			activeModal = "";
 		}
@@ -291,8 +338,11 @@ void UI::drawModals() {
 		ImGui::Separator();
 
 		if (ImGui::Button("Apply", ImVec2(80, 30))) {
-			cv::Mat img = Application::GetInstance()->image->imgData;
-			Image::ColorReduce(current_bit_reduction+1, Application::GetInstance()->image);
+			// Save current Action on history
+			Application::GetInstance()->image->currentFilter = IMG_QUANTIZATION_BIT_REDUCTION;
+			History::PushAction(Application::GetInstance()->image);
+			// Apply filter
+			DIPlib::ColorReduce(current_bit_reduction+1, Application::GetInstance()->image);
 			ImGui::CloseCurrentPopup();
 			activeModal = "";
 		}
@@ -330,8 +380,11 @@ void UI::drawModals() {
 		ImGui::Combo("##median_cut_combo", &current_bit_reduction, bit_reduction_options, IM_ARRAYSIZE(bit_reduction_options));
 
 		if (ImGui::Button("Apply", ImVec2(80, 30))) {
-			cv::Mat img = Application::GetInstance()->image->imgData;
-			Image::MedianCut(blocks[current_bit_reduction], Application::GetInstance()->image);
+			// Save current Action on history
+			Application::GetInstance()->image->currentFilter = IMG_QUANTIZATION_MEDIAN_CUT;
+			History::PushAction(Application::GetInstance()->image);
+			// Perform Action
+			DIPlib::MedianCut(blocks[current_bit_reduction], Application::GetInstance()->image);
 			ImGui::CloseCurrentPopup();
 			activeModal = "";
 		}
@@ -356,7 +409,11 @@ void UI::drawModals() {
 		ImGui::DragInt("##k_val", &k, 1, 1, 256);
 
 		if (ImGui::Button("Apply", ImVec2(80, 30))) {
-			Image::KMeans(k, Application::GetInstance()->image);
+			// Save current Action on history
+			Application::GetInstance()->image->currentFilter = IMG_QUANTIZATION_K_MEANS;
+			History::PushAction(Application::GetInstance()->image);
+			// Perform Action
+			DIPlib::KMeans(k, Application::GetInstance()->image);
 			ImGui::CloseCurrentPopup();
 			activeModal = "";
 		}
@@ -466,12 +523,16 @@ void UI::drawModals() {
 		ImGui::DragFloat("##angle", &deg, 0.005f, -359.99f, 359.99f, "%.2f");
 
 
-		static int label = 0;
-		ImGui::RadioButton("Clockwisew##cw", &label, 1);
-		ImGui::RadioButton("Counter\nClockwisew##ccw", &label, -1);
+		static int label = 1;
+		ImGui::RadioButton("Clockwise##cw", &label, 1);
+		ImGui::RadioButton("Counter\nClockwise##ccw", &label, -1);
 
 		if (ImGui::Button("OK", ImVec2(80, 30))) {
-			Image::Rotate(Application::GetInstance()->image, deg*label);
+			// Save current Action on history
+			Application::GetInstance()->image->currentFilter = IMG_TRANSFORM_ROTATE;
+			History::PushAction(Application::GetInstance()->image);
+			// Perform Action
+			DIPlib::Rotate(Application::GetInstance()->image, deg*label);
 			ImGui::CloseCurrentPopup();
 			activeModal = "";
 		}

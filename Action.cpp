@@ -1,22 +1,13 @@
 #include "Action.h"
 
+Action::Action() {}
 
-Action::Action(Image* image, ACTION_TYPE type) {
-	memcpy(this->image, image, sizeof(*image));
-	//this->imgData = image->imgData;
-	//this->type = type;
-	//this->width = image->width;
-	//this->height = image->height;
-	//this->channels = image->channels;
-	//this->bitDepth = image->bitDepth;
-	//this->dpi = image->dpi;
-	//this->size = image->size;
-	//this->ext = image->ext;
-	//this->path = image->path;
-	//this->format = image->format;
-	//this->internalFormat = image->internalFormat;
+Action::Action(Image* image) {
+	this->image = new Image();
+	Image::cloneImage(image, this->image);
 }
 
 Action::~Action() {
 
 }
+

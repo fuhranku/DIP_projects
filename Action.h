@@ -1,28 +1,13 @@
 #pragma once
 #include "Image.h"
-
-enum ACTION_TYPE {
-
-	QUANTIZATION_BIT_REDUCTION,
-	QUANTIZATION_MEDIAN_CUT,
-	QUANTIZATION_K_MEDIAN,
-	THRESHOLD_OTSU,
-	THRESHOLD_GAUSSIAN,
-	HISTOGRAM_EQUALIZATION,
-	REGION_GROW,
-	FOURIER_TRANSFORM,
-	FOURIER_TRANSFORM_INVERSE
-};
-
+#include "DIPlib.h"
 
 class Action
 {
-
 public:
-	Action(Image* image, ACTION_TYPE type);
+	Action();
+	Action(Image* image);
 	~Action();
 
-	ACTION_TYPE type;
 	Image* image;
 };
-

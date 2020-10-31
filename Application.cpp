@@ -85,15 +85,6 @@ void Application::OnMouseButton(GLFWwindow* window, int button, int action, int 
         glm::vec4 mouse_pos_near_world = M_vw * mouse_pos_near_view;
         glm::vec4 mouse_pos_far_world = M_vw * mouse_pos_far_view;
 
-        printf("(%f,%f,%f)\n", mouse_pos_near_world.x
-                             , mouse_pos_near_world.y
-                             , mouse_pos_near_world.z);
-
-        printf("(%f,%f,%f)\n", mouse_pos_far_world.x
-                             , mouse_pos_far_world.y
-                             , mouse_pos_far_world.z);
-
-
     }
 }
 
@@ -102,22 +93,25 @@ void Application::OnKeyPress(GLFWwindow* window, int key, int scancode, int acti
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
         camera.moveForward(Application::GetInstance()->deltaTime);
     }
+
     // Move Backward
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
         camera.moveBackward(Application::GetInstance()->deltaTime);
     }
 
+    // Open Image
     if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS && mods == GLFW_MOD_CONTROL) {
         Application::GetInstance()->ui.activeModal = "Open Image##open_image";
     }
 
+    // Quick Save
     if (glfwGetKey(window, GLFW_KEY_S)            == GLFW_PRESS &&
         glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS &&
         Application::GetInstance()->imageLoaded) {
-        Application::UpdateImageOnDisk(Application::GetInstance()->image);
-        Application::GetInstance()->ui.activeModal = "Success##saved_modal";
+        Application::GetInstance()->ui.activeModal = "Confirm overwrite##confirm_overwrite_save";
     }
 
+    // Export as
     if (glfwGetKey(window, GLFW_KEY_S)            == GLFW_PRESS &&
         glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS &&
         glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)   == GLFW_PRESS &&
@@ -127,12 +121,26 @@ void Application::OnKeyPress(GLFWwindow* window, int key, int scancode, int acti
             Application::ExportImage(path.c_str(), Application::GetInstance()->image);
             Application::GetInstance()->ui.activeModal = "Success##saved_modal";
         }
-    } 
+    }
+
+    // Redo action
+    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS &&
+        glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS &&
+        glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS &&
+        Application::GetInstance()->imageLoaded) {
+            if (History::GetInstance()->_redoStack.size() != 0)
+                History::_redo(Application::GetInstance()->image);
+    // Undo action
+    }else if ( glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS &&
+               glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS &&
+               Application::GetInstance()->imageLoaded) {
+            if(History::GetInstance()->_undoStack.size() != 0)
+                 History::_undo(Application::GetInstance()->image);
+    }
+
 }
 
 void Application::OnMouseScroll(GLFWwindow* window, double posX, double posY) {
-    //std::cout << posX << ", " << posY << std::endl;
-
     if (posY == 1.0f) {
         camera.moveForward(Application::GetInstance()->deltaTime);
     }
@@ -158,8 +166,6 @@ void Application::ProcessKeyboardInput(GLFWwindow* window)
         delete shader;
         shader = new Shader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
     }
-
-
     // Move right
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
         camera.moveRight(deltaTime);
@@ -187,8 +193,6 @@ void Application::ProcessKeyboardInput(GLFWwindow* window)
         glm::vec2 dir = glm::vec2(currentMousePos.x - lastMousePos.x,
                                   currentMousePos.y - lastMousePos.y);
         camera.moveDir(deltaTime, dir);
-    }
-    else {
     }
 
 }
@@ -223,10 +227,14 @@ void Application::CalcDeltaTime() {
 
 void Application::OpenImage(char* path, int colorSpace) {
     Application* app = Application::GetInstance();
+    // Create new image
     app->image = new Image(path, colorSpace);
+    // Compute histogram
+    DIPlib::Histograms(app->image);
 
     if (app->image->imgData.empty()) return;
-    // Let software know we have a loaded image now
+
+    // Let software there's a loaded image
     app->imageLoaded = true;
 }
 
@@ -375,8 +383,8 @@ void Application::drawGrid() {
     // Don't draw if no image is loaded
     if (!imageLoaded) return;
 
-    //// Draw when zoom reaches this point
-    //if (camera.getUIZoom() < 1000.0f) return;
+    // Draw when zoom reaches this point
+    if (camera.getUIZoom() < 1000.0f) return;
 
     image->canvas.grid.Draw(camera.getWorldToViewMatrix(), camera.getOrthoMatrix());
 }

@@ -73,7 +73,7 @@ Grid::Grid(int width, int height){
         }
     }
 
-    for (int j = 0; j < height; ++j) {
+    for (int j = 0; j < height-1; ++j) {  
         for (int i = 0; i < width; ++i) {
 
             int row1 = j * (width + 1);

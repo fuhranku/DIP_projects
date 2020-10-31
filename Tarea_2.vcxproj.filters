@@ -16,9 +16,10 @@
     <ClCompile Include="userInterface.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="History.cpp" />
-    <ClCompile Include="Action.cpp" />
     <ClCompile Include="Canvas.cpp" />
+    <ClCompile Include="History.cpp" />
+    <ClCompile Include="DIPlib.cpp" />
+    <ClCompile Include="Action.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -26,12 +27,16 @@
     <ClInclude Include="userInterface.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="History.h" />
-    <ClInclude Include="Action.h" />
     <ClInclude Include="Canvas.h" />
+    <ClInclude Include="History.h" />
+    <ClInclude Include="DIPlib.h" />
+    <ClInclude Include="BGRColor.h" />
+    <ClInclude Include="Action.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\basic.frag" />
     <None Include="assets\shaders\basic.vert" />
+    <None Include="assets\shaders\gridShader.frag" />
+    <None Include="assets\shaders\gridShader.vert" />
   </ItemGroup>
 </Project>

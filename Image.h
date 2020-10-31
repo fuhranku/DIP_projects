@@ -4,7 +4,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <stb_image.h>
 #include <iostream>
 #include <vector>
 #include <opencv2/opencv.hpp>
@@ -14,13 +13,25 @@
 #include <numeric>
 #include <string>
 #include "Canvas.h"
-//#include "History.h"
+#include "BGRColor.h"
 
-#define IMG_BMP 0x0001
-#define IMG_JPG 0x0002
-#define IMG_PNG 0x0003
-#define IMG_WEBP 0x0004
-#define IMG_TIFF 0x0005
+#define IMG_NONE 0x000000
+#define IMG_BMP 0x000001
+#define IMG_JPG 0x000002
+#define IMG_PNG 0x000003
+#define IMG_WEBP 0x000004
+#define IMG_TIFF 0x000005
+#define	IMG_QUANTIZATION_BIT_REDUCTION 0x000006
+#define	IMG_QUANTIZATION_MEDIAN_CUT	   0x000007
+#define	IMG_QUANTIZATION_K_MEANS	   0x000008
+#define	IMG_THRESHOLD_OTSU			   0x000009
+#define	IMG_THRESHOLD_GAUSSIAN		   0x00000A
+#define	IMG_HISTOGRAM_EQUALIZATION	   0x00000B
+#define	IMG_REGION_GROW				   0x00000C
+#define	IMG_FOURIER_TRANSFORM		   0x00000D
+#define	IMG_FOURIER_TRANSFORM_INVERSE  0x00000E
+#define IMG_TRANSFORM_ROTATE           0x00000F
+#define IMG_TRANSFORM_FLIP             0x000010
 
 struct Histogram {
 	int* data;
@@ -81,24 +92,9 @@ struct Vertex {
 		texture(texCoord) {}
 };
 
-class bgrColor{
-public:
-	int b, g, r;
-	bgrColor(int b, int g, int r) {
-		this->b = b;
-		this->g = g;
-		this->r = r;
-	}
-};
-
 class Image
 {
 private:
-	static unsigned int findBiggestRange(std::vector<bgrColor> color);
-	static void QuantizeMC(std::vector<bgrColor>& out,std::vector<bgrColor> color, int currentDepth, int maxDepth);
-	static Image* Any2BGR (Image* image);
-	static Image* Any2Gray(Image* image);
-	static Image* Any2YCrCb(Image* image);
 	void getFileExtension(std::string path);
 public:
 	Image(const char* path);
@@ -109,26 +105,17 @@ public:
 	std::vector<Histogram> histogram;
 	cv::Mat imgData;
 	//History history;
-	static void Histograms(Image* image);
-	static void UpdateTextureData(Image* image);
-	static void OTSU(double thresh, double maxValue, Image* image);
-	static void GaussianAdaptiveThreshold(double thresh, double maxValue, Image* image);
-	static void MedianCut(int blocks, Image* image);
-	static void KMeans(int k, Image* image);
-	static void ColorReduce(int numBits, Image* image);
-	static void EqualizeHist(Image* image);
-	static void Rotate(Image* image, float deg);
-	static void Flip(Image* image, int mode);
-	static void Undo(Image* image);
 	int width;
 	int height;
 	int channels;
 	int bitDepth = 256;
 	int dpi;
+	int currentFilter = 0;
 	Size size;
 	Extension ext;
 	std::string path;
 	unsigned int format = 0, internalFormat = 0;
 	unsigned int id;
+	static void cloneImage(Image* src, Image* dst);
 };
 
