@@ -22,5 +22,6 @@ public:
 	static void EqualizeHist(Image* image);
 	static void Rotate(Image* image, float deg);
 	static void Flip(Image* image, int mode);
+	static void DFT(Image* image);
 };
 

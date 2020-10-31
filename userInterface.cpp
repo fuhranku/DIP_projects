@@ -193,6 +193,14 @@ void UI::drawTopMenu() {
 				DIPlib::EqualizeHist(Application::GetInstance()->image);
 			}
 
+			if (ImGui::MenuItem("Fourier Transform")) {
+				// Save current Action on history
+				Application::GetInstance()->image->currentFilter = IMG_FOURIER_TRANSFORM;
+				History::PushAction(Application::GetInstance()->image);
+				// Perform Action
+				DIPlib::DFT(Application::GetInstance()->image);
+			}
+
 			ImGui::EndMenu();
 		}
 		popDisable(!Application::GetInstance()->imageLoaded);
