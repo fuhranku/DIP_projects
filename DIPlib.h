@@ -12,7 +12,8 @@ private:
 	static void Any2Gray(Image* image);
 	static void Any2YCrCb(Image* image);
 	static cv::Mat computeDFT(cv::Mat channel);
-	static void fftShift(Image* image);
+	static cv::Mat fftShift(cv::Mat complexI);
+	static cv::Mat computeMagnitude(cv::Mat complexI);
 public:
 	static void Histograms(Image* image);
 	static void UpdateTextureData(Image* image);

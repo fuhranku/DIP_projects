@@ -401,61 +401,19 @@ void DIPlib::DFT(Image* image) {
     // Step 2: Compute DFT for each image channel
     for (auto channel : img_channels) {
 
-        /* Performance of DFT calculation is better for some array size.
-        It is fastest when array size is power of two.
-        The arrays whose size is a product of 2’s, 3’s, and 5’s are also processed quite efficiently. */
+        // Save original dimensions of image for further use
+        data.originalWidth = channel.cols;
+        data.originalHeight = channel.rows;
 
-        // On the border add zero values
-        // Save diff of resolution
-        data.originalWidth =  image->width;
-        data.originalHeight = image->height;
-        copyMakeBorder(channel,
-                        padded,
-                        0,
-                        m - image->height,
-                        0,
-                        n - image->width,
-                        cv::BORDER_CONSTANT,
-                        cv::Scalar::all(0)
-        );
-        cv::Mat planes[2];
-        padded.convertTo(planes[0], CV_32F);
-        planes[1] = cv::Mat::zeros(padded.rows, padded.cols, CV_32F);
-        cv::Mat complexI;
-        // Add to the expanded another plane with zeros
-        cv::merge(planes,2, complexI);         
-        // this way the result may fit in the source matrix
-        cv::dft(complexI,complexI);
-        // compute the magnitude and switch to logarithmic scale
-        // => log(1 + sqrt(Re(DFT(I))^2 + Im(DFT(I))^2))
-        // Save complexI Mat to be able to apply IDFT later
-        data.complexI = complexI;
-        // planes[0] = Re(DFT(I), planes[1] = Im(DFT(I))
-        cv::split(complexI, planes);                   
-        // planes[0] = magnitude
-        cv::magnitude(planes[0], planes[1], planes[0]);
-        cv::Mat magI = planes[0];
-        // switch to logarithmic scale
-        magI += cv::Scalar::all(1);                    
-        cv::log(magI, magI);
-        // crop the spectrum, if it has an odd number of rows or columns
-        magI = magI(cv::Rect(0, 0, magI.cols & -2, magI.rows & -2));
-        // rearrange the quadrants of Fourier image  so that the origin is at the image center
-        int cx = magI.cols / 2;
-        int cy = magI.rows / 2;
-        cv::Mat q0(magI, cv::Rect(0, 0, cx, cy));   // Top-Left - Create a ROI per quadrant
-        cv::Mat q1(magI, cv::Rect(cx, 0, cx, cy));  // Top-Right
-        cv::Mat q2(magI, cv::Rect(0, cy, cx, cy));  // Bottom-Left
-        cv::Mat q3(magI, cv::Rect(cx, cy, cx, cy)); // Bottom-Right
-        cv::Mat tmp;                           // swap quadrants (Top-Left with Bottom-Right)
-        q0.copyTo(tmp);
-        q3.copyTo(q0);
-        tmp.copyTo(q3);
-        q1.copyTo(tmp);                    // swap quadrant (Top-Right with Bottom-Left)
-        q2.copyTo(q1);
-        tmp.copyTo(q2);
-        data.mag = magI;
-        
+        // Compute Complex array of image with DFT
+        data = computeDFT(channel);
+
+        // Rearrange cuadrants
+        data.mag = fftShift(data.complexI);
+
+        // Compute magnitude
+        data.mag = computeMagnitude(data.complexI);
+
         // Save frequency data
         image->freqData.push_back(data);
     }
@@ -483,13 +441,11 @@ cv::Mat DIPlib::computeDFT(cv::Mat channel){
     cv::Mat padded;
     int m = cv::getOptimalDFTSize(channel.rows);
     int n = cv::getOptimalDFTSize(channel.cols);
-    FreqData data;
     // Step 2: Compute DFT for each image channel
 
     // On the border add zero values
     // Save diff of resolution
-    data.originalWidth = channel.cols;
-    data.originalHeight = channel.rows;
+
     copyMakeBorder(channel,
         padded,
         0,
@@ -506,12 +462,49 @@ cv::Mat DIPlib::computeDFT(cv::Mat channel){
     // Add to the expanded another plane with zeros
     cv::merge(planes, 2, complexI);
     // this way the result may fit in the source matrix
-    cv::dft(complexI, complexI);
+    cv::dft(complexI, complexI,cv::DFT_COMPLEX_OUTPUT);
 
+    return complexI;
+}
 
+cv::Mat DIPlib::fftShift(cv::Mat complexI) {
+    cv::Mat magI = complexI.clone();
+    // crop if it has an odd number of rows or columns
+    magI = magI(cv::Rect(0, 0, magI.cols & -2, magI.rows & -2));
+
+    int cx = magI.cols / 2;
+    int cy = magI.rows / 2;
+
+    cv::Mat q0(magI, cv::Rect(0, 0, cx, cy));   // Top-Left - Create a ROI per quadrant
+    cv::Mat q1(magI, cv::Rect(cx, 0, cx, cy));  // Top-Right
+    cv::Mat q2(magI, cv::Rect(0, cy, cx, cy));  // Bottom-Left
+    cv::Mat q3(magI, cv::Rect(cx, cy, cx, cy)); // Bottom-Right
+
+    cv::Mat tmp;                            // swap quadrants (Top-Left with Bottom-Right)
+    q0.copyTo(tmp);
+    q3.copyTo(q0);
+    tmp.copyTo(q3);
+
+    q1.copyTo(tmp);                     // swap quadrant (Top-Right with Bottom-Left)
+    q2.copyTo(q1);
+    tmp.copyTo(q2);
+
+    return magI;
 }
-void DIPlib::fftShift(Image* image) {
+
+cv::Mat DIPlib::computeMagnitude(cv::Mat complexI) {
+    cv::Mat planes[2];
+    cv::split(complexI, planes);
+    // planes[0] = magnitude
+    cv::Mat magI;
+    cv::magnitude(planes[0], planes[1], magI);
+    // switch to logarithmic scale
+    magI += cv::Scalar::all(1);
+    cv::log(magI, magI);
+    // crop the spectrum, if it has an odd number of rows or columns
+    return DIPlib::fftShift(magI);
 }
+
 
 
 void DIPlib::IDFT(Image* image) {
