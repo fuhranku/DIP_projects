@@ -101,8 +101,8 @@ void Camera::moveDown(float time) {
 }
 
 void Camera::moveDir(float time, glm::vec2 dir) {
-	float speed = PANNING_SPEED * time;
-	glm::vec3 delta = glm::vec3(-dir.x, dir.y, 0);
+	float speed = panning_zooming_speed * time;
+	glm::vec3 delta = glm::vec3(-dir.x, dir.y, 0)/2.0f * zoom;
 	position += /* speed * */ delta;
 	viewMatrix = glm::lookAt(position, position + viewDirection, UP);
 }
