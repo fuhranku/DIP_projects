@@ -5,6 +5,7 @@ Image::Image() {
 }
 
 Image::Image(const char *path) {
+    //
     // Creates the texture on GPU
     imgData = cv::imread(path, cv::IMREAD_UNCHANGED);
 
@@ -179,4 +180,6 @@ void Image::cloneImage(Image* src, Image* dst) {
     dst->internalFormat = src->internalFormat;
     dst->path = src->path;
     dst->size = src->size;
+    dst->freqComputed = src->freqComputed;
+    dst->freqData = src->freqData;
 }

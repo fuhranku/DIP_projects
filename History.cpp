@@ -21,6 +21,8 @@ History::~History() {
 }
 
 void History::_undo(Image* image) {
+	// Revert states if applies (before undoing)
+
 	// Push current Action to redo stack
 	Image* savedImage = new Image();
 	Image::cloneImage(image, savedImage);
@@ -37,12 +39,14 @@ void History::_undo(Image* image) {
 	// Update GPU texture
 	DIPlib::UpdateTextureData(image);
 
-	// Recalculate canvas if applies
+	// Revert states if applies (after undoing)
 	if (image->currentFilter == IMG_TRANSFORM_ROTATE)
 		image->canvas.Update(image->width, image->height);
 }
 
 void History::_redo(Image* image) {
+	// Restore states if applies (before redoing)
+
 	// Push current Action to undo stack
 	Image* savedImage = new Image();
 	Image::cloneImage(image, savedImage);
@@ -59,9 +63,10 @@ void History::_redo(Image* image) {
 	// Update GPU texture
 	DIPlib::UpdateTextureData(image);
 
-	// Recalculate canvas if applies
+	// Restore states if applies (after redoing)
 	if (image->currentFilter == IMG_TRANSFORM_ROTATE)
 		image->canvas.Update(image->width, image->height);
+
 }
 
 

@@ -115,7 +115,6 @@ void DIPlib::KMeans(int k, Image* image) {
     DIPlib::Histograms(image);
     // Update GPU Texture
     DIPlib::UpdateTextureData(image);
-    // History code here
 }
 
 unsigned int DIPlib::findBiggestRange(std::vector<bgrColor> color) {
@@ -389,71 +388,165 @@ void DIPlib::EqualizeHist(Image* image) {
 }
 
 void DIPlib::DFT(Image* image) {
-
-    Any2Gray(image);
-
-    /* Performance of DFT calculation is better for some array size.
-    It is fastest when array size is power of two.
-    The arrays whose size is a product of 2’s, 3’s, and 5’s are also processed quite efficiently. */
+    // Clear if new transformation is happening
+    image->freqData.clear();
+    std::vector<cv::Mat> img_channels;
+    cv::split(image->imgData, img_channels);
 
     // Step 1: expand input image to optimal size
     cv::Mat padded;                           
     int m = cv::getOptimalDFTSize(image->imgData.rows);
     int n = cv::getOptimalDFTSize(image->imgData.cols); 
+    FreqData data;
+    // Step 2: Compute DFT for each image channel
+    for (auto channel : img_channels) {
+
+        /* Performance of DFT calculation is better for some array size.
+        It is fastest when array size is power of two.
+        The arrays whose size is a product of 2’s, 3’s, and 5’s are also processed quite efficiently. */
+
+        // On the border add zero values
+        // Save diff of resolution
+        data.originalWidth =  image->width;
+        data.originalHeight = image->height;
+        copyMakeBorder(channel,
+                        padded,
+                        0,
+                        m - image->height,
+                        0,
+                        n - image->width,
+                        cv::BORDER_CONSTANT,
+                        cv::Scalar::all(0)
+        );
+        cv::Mat planes[2];
+        padded.convertTo(planes[0], CV_32F);
+        planes[1] = cv::Mat::zeros(padded.rows, padded.cols, CV_32F);
+        cv::Mat complexI;
+        // Add to the expanded another plane with zeros
+        cv::merge(planes,2, complexI);         
+        // this way the result may fit in the source matrix
+        cv::dft(complexI,complexI);
+        // compute the magnitude and switch to logarithmic scale
+        // => log(1 + sqrt(Re(DFT(I))^2 + Im(DFT(I))^2))
+        // Save complexI Mat to be able to apply IDFT later
+        data.complexI = complexI;
+        // planes[0] = Re(DFT(I), planes[1] = Im(DFT(I))
+        cv::split(complexI, planes);                   
+        // planes[0] = magnitude
+        cv::magnitude(planes[0], planes[1], planes[0]);
+        cv::Mat magI = planes[0];
+        // switch to logarithmic scale
+        magI += cv::Scalar::all(1);                    
+        cv::log(magI, magI);
+        // crop the spectrum, if it has an odd number of rows or columns
+        magI = magI(cv::Rect(0, 0, magI.cols & -2, magI.rows & -2));
+        // rearrange the quadrants of Fourier image  so that the origin is at the image center
+        int cx = magI.cols / 2;
+        int cy = magI.rows / 2;
+        cv::Mat q0(magI, cv::Rect(0, 0, cx, cy));   // Top-Left - Create a ROI per quadrant
+        cv::Mat q1(magI, cv::Rect(cx, 0, cx, cy));  // Top-Right
+        cv::Mat q2(magI, cv::Rect(0, cy, cx, cy));  // Bottom-Left
+        cv::Mat q3(magI, cv::Rect(cx, cy, cx, cy)); // Bottom-Right
+        cv::Mat tmp;                           // swap quadrants (Top-Left with Bottom-Right)
+        q0.copyTo(tmp);
+        q3.copyTo(q0);
+        tmp.copyTo(q3);
+        q1.copyTo(tmp);                    // swap quadrant (Top-Right with Bottom-Left)
+        q2.copyTo(q1);
+        tmp.copyTo(q2);
+        data.mag = magI;
+        
+        // Save frequency data
+        image->freqData.push_back(data);
+    }
+
+    // Render Image on Frequency Domain (data holds last iteration value)
+    normalize(data.mag, data.mag, 0, 255, cv::NORM_MINMAX);
+    data.mag.convertTo(data.mag, CV_8U);
+
+    image->imgData = data.mag.clone();
+    image->width = data.mag.cols;
+    image->height = data.mag.rows;
+    image->format = GL_RED;
+    image->internalFormat = GL_R8;
+    image->channels = 1;
+    image->freqComputed = 1;
+    // Rebuild Plane
+    image->canvas.Update(image->width, image->height);
+    // Update GPU Texture
+    DIPlib::UpdateTextureData(image);
+                                            
+}
+
+cv::Mat DIPlib::computeDFT(cv::Mat channel){
+    // Step 1: expand input image to optimal size
+    cv::Mat padded;
+    int m = cv::getOptimalDFTSize(channel.rows);
+    int n = cv::getOptimalDFTSize(channel.cols);
+    FreqData data;
+    // Step 2: Compute DFT for each image channel
+
     // On the border add zero values
-    copyMakeBorder(image->imgData,
-                       padded,
-                       0,
-                       m - image->imgData.rows,
-                       0,
-                       n - image->imgData.cols,
-                       cv::BORDER_CONSTANT,
-                       cv::Scalar::all(0)
-                   );
+    // Save diff of resolution
+    data.originalWidth = channel.cols;
+    data.originalHeight = channel.rows;
+    copyMakeBorder(channel,
+        padded,
+        0,
+        m - channel.rows,
+        0,
+        n - channel.cols,
+        cv::BORDER_CONSTANT,
+        cv::Scalar::all(0)
+    );
     cv::Mat planes[2];
     padded.convertTo(planes[0], CV_32F);
     planes[1] = cv::Mat::zeros(padded.rows, padded.cols, CV_32F);
     cv::Mat complexI;
     // Add to the expanded another plane with zeros
-    cv::merge(planes,2, complexI);         
+    cv::merge(planes, 2, complexI);
     // this way the result may fit in the source matrix
-    cv::dft(complexI,complexI);
-    // compute the magnitude and switch to logarithmic scale
-    // => log(1 + sqrt(Re(DFT(I))^2 + Im(DFT(I))^2))
+    cv::dft(complexI, complexI);
 
-    // planes[0] = Re(DFT(I), planes[1] = Im(DFT(I))
-    cv::split(complexI, planes);                   
-    // planes[0] = magnitude
-    cv::magnitude(planes[0], planes[1], planes[0]);
-    cv::Mat magI = planes[0];
-    // switch to logarithmic scale
-    magI += cv::Scalar::all(1);                    
-    cv::log(magI, magI);
-    // crop the spectrum, if it has an odd number of rows or columns
-    magI = magI(cv::Rect(0, 0, magI.cols & -2, magI.rows & -2));
-    // rearrange the quadrants of Fourier image  so that the origin is at the image center
-    int cx = magI.cols / 2;
-    int cy = magI.rows / 2;
-    cv::Mat q0(magI, cv::Rect(0, 0, cx, cy));   // Top-Left - Create a ROI per quadrant
-    cv::Mat q1(magI, cv::Rect(cx, 0, cx, cy));  // Top-Right
-    cv::Mat q2(magI, cv::Rect(0, cy, cx, cy));  // Bottom-Left
-    cv::Mat q3(magI, cv::Rect(cx, cy, cx, cy)); // Bottom-Right
-    cv::Mat tmp;                           // swap quadrants (Top-Left with Bottom-Right)
-    q0.copyTo(tmp);
-    q3.copyTo(q0);
-    tmp.copyTo(q3);
-    q1.copyTo(tmp);                    // swap quadrant (Top-Right with Bottom-Left)
-    q2.copyTo(q1);
-    tmp.copyTo(q2);
 
-    // Transform the matrix with float values into a viewable image form (float between values 0 and 1)
-    normalize(magI, magI, 0, 1, cv::NORM_MINMAX); 
+}
+void DIPlib::fftShift(Image* image) {
+}
 
-    //image->imgData = magI.clone();
 
-    cv::imshow("DFT",magI);
-
-    //DIPlib::UpdateTextureData(image);
-                                            
+void DIPlib::IDFT(Image* image) {
+    std::vector<cv::Mat> channelArray;
+    cv::Mat inverseTransform;
+    for (auto channel: image->freqData) {
+        cv::dft(channel.complexI, inverseTransform, cv::DFT_INVERSE | cv::DFT_REAL_OUTPUT);
+        normalize(inverseTransform, inverseTransform, 0, 255, cv::NORM_MINMAX);
+        inverseTransform.convertTo(inverseTransform, CV_8U);
+        channelArray.push_back(inverseTransform);
     }
+    cv::Mat mat;
+    cv::merge(
+        channelArray,
+        mat
+    );
+    // Crop to original size
+    cv::Rect crop_region(
+        0,
+        0,
+        image->freqData[0].originalWidth,
+        image->freqData[0].originalHeight
+    );
+    mat = mat(crop_region);
+    // Render image
+    image->imgData = mat.clone();
+    image->width = image->freqData[0].originalWidth;
+    image->height = image->freqData[0].originalHeight;
+    image->format = GL_BGR;
+    image->internalFormat = GL_RGB;
+    image->channels = 3;
+    image->freqComputed = 0;
+    // Rebuild Plane
+    image->canvas.Update(image->width, image->height);
+    // Update GPU Texture
+    DIPlib::UpdateTextureData(image);
 
+}

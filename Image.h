@@ -95,6 +95,12 @@ struct Vertex {
 		texture(texCoord) {}
 };
 
+struct FreqData {
+	int originalWidth, originalHeight;
+	cv::Mat mag;
+	cv::Mat complexI;
+};
+
 class Image
 {
 private:
@@ -106,14 +112,15 @@ public:
 	~Image();
 	Canvas canvas;
 	std::vector<Histogram> histogram;
+	std::vector<FreqData> freqData;
 	cv::Mat imgData;
-	//History history;
 	int width;
 	int height;
 	int channels;
 	int bitDepth = 256;
 	int dpi;
 	int currentFilter = 0;
+	bool freqComputed = 0;
 	Size size;
 	Extension ext;
 	std::string path;

@@ -111,8 +111,9 @@ void UI::drawTopMenu() {
 		}
 		pushDisable(!Application::GetInstance()->imageLoaded);
 		if (ImGui::BeginMenu("Filter")) {
+			pushDisable(Application::GetInstance()->image->freqComputed);
 			if (ImGui::BeginMenu("Thresholding")) {
-				if(ImGui::MenuItem("OTSU")) {
+				if (ImGui::MenuItem("OTSU")) {
 					activeModal = "OTSU Threshold##otsu_modal";
 				}
 				if (ImGui::MenuItem("Adaptive Threshold")) {
@@ -120,6 +121,8 @@ void UI::drawTopMenu() {
 				}
 				ImGui::EndMenu();
 			}
+			popDisable(Application::GetInstance()->image->freqComputed);
+			pushDisable(Application::GetInstance()->image->freqComputed);
 			if (ImGui::BeginMenu("Quantization")) {
 				if (ImGui::MenuItem("Color reduce")) {
 					activeModal = "Bits per pixel color reduction##color_reduce";
@@ -132,7 +135,24 @@ void UI::drawTopMenu() {
 				}
 				ImGui::EndMenu();
 			}
+			popDisable(Application::GetInstance()->image->freqComputed);
+			ImGui::Separator();
+			pushDisable(!Application::GetInstance()->image->freqComputed);
+			if (ImGui::BeginMenu("Signals")) {
+				if (ImGui::MenuItem("Low pass")) {
+					//activeModal = "K-means Technique##kmean_technique";
+				}
+				if (ImGui::MenuItem("High pass")) {
+					//activeModal = "K-means Technique##kmean_technique";
+				}
+				if (ImGui::MenuItem("Rasho laser")) {
+					//activeModal = "K-means Technique##kmean_technique";
+				}
+				ImGui::EndMenu();
+			}
+			popDisable(!Application::GetInstance()->image->freqComputed);
 			ImGui::EndMenu();
+
 		}
 		popDisable(!Application::GetInstance()->imageLoaded);
 
@@ -192,14 +212,26 @@ void UI::drawTopMenu() {
 				// Perform Action
 				DIPlib::EqualizeHist(Application::GetInstance()->image);
 			}
-
-			if (ImGui::MenuItem("Fourier Transform")) {
+			ImGui::Separator();
+			bool freqComputed = Application::GetInstance()->image->freqComputed;
+			pushDisable(freqComputed);
+			if (ImGui::MenuItem("Switch to Frequency Domain")) {
 				// Save current Action on history
 				Application::GetInstance()->image->currentFilter = IMG_FOURIER_TRANSFORM;
 				History::PushAction(Application::GetInstance()->image);
 				// Perform Action
 				DIPlib::DFT(Application::GetInstance()->image);
 			}
+			popDisable(freqComputed);
+			pushDisable(!freqComputed);
+			if (ImGui::MenuItem("Switch to Spatial Domain")) {
+				// Save current Action on history
+				Application::GetInstance()->image->currentFilter = IMG_FOURIER_TRANSFORM_INVERSE;
+				History::PushAction(Application::GetInstance()->image);
+				// Perform Action
+				DIPlib::IDFT(Application::GetInstance()->image);
+			}
+			popDisable(!freqComputed);
 
 			ImGui::EndMenu();
 		}
