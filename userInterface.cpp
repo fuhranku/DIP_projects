@@ -137,20 +137,27 @@ void UI::drawTopMenu() {
 			}
 			popDisable(Application::GetInstance()->image->freqComputed);
 			ImGui::Separator();
-			pushDisable(!Application::GetInstance()->image->freqComputed);
+
+			bool freqComputed = Application::GetInstance()->image->freqComputed;
+			pushDisable(!freqComputed);
 			if (ImGui::BeginMenu("Signals")) {
 				if (ImGui::MenuItem("Low pass")) {
-					//activeModal = "K-means Technique##kmean_technique";
+					DIPlib::FourierFilter(
+						Application::GetInstance()->image,
+						IMG_FOURIER_LOW_PASS,
+						30
+					);
 				}
 				if (ImGui::MenuItem("High pass")) {
-					//activeModal = "K-means Technique##kmean_technique";
-				}
-				if (ImGui::MenuItem("Rasho laser")) {
-					//activeModal = "K-means Technique##kmean_technique";
+					DIPlib::FourierFilter(
+						Application::GetInstance()->image,
+						IMG_FOURIER_HIGH_PASS,
+						30
+					);
 				}
 				ImGui::EndMenu();
 			}
-			popDisable(!Application::GetInstance()->image->freqComputed);
+			popDisable(!freqComputed);
 			ImGui::EndMenu();
 
 		}

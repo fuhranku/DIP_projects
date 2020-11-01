@@ -35,6 +35,9 @@
 #define	IMG_FOURIER_TRANSFORM_INVERSE  0x00000E
 #define IMG_TRANSFORM_ROTATE           0x00000F
 #define IMG_TRANSFORM_FLIP             0x000010
+#define	IMG_FOURIER_LOW_PASS		   0x000011
+#define	IMG_FOURIER_HIGH_PASS		   0x000012
+
 
 struct Histogram {
 	int* data;

@@ -11,6 +11,9 @@ private:
 	static void Any2BGR(Image* image);
 	static void Any2Gray(Image* image);
 	static void Any2YCrCb(Image* image);
+	static void LowPassFilter(const cv::Mat &fourierFilter, int distance);
+	static void HighPassFilter(const cv::Mat &fourierFilter, int distance);
+	static void FourierToImage(Image* image, std::vector<cv::Mat> channelArray);
 	static cv::Mat computeDFT(cv::Mat channel);
 	static cv::Mat fftShift(cv::Mat complexI);
 	static cv::Mat computeMagnitude(cv::Mat complexI);
@@ -27,6 +30,7 @@ public:
 	static void Flip(Image* image, int mode);
 	static void DFT(Image* image);
 	static void IDFT(Image* image);
+	static void FourierFilter(Image *image, int type, int distance);
 	
 };
 

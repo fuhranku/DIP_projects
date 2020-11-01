@@ -406,7 +406,7 @@ void DIPlib::DFT(Image* image) {
         data.originalHeight = channel.rows;
 
         // Compute Complex array of image with DFT
-        data = computeDFT(channel);
+        data.complexI = computeDFT(channel);
 
         // Rearrange cuadrants
         data.mag = fftShift(data.complexI);
@@ -455,9 +455,7 @@ cv::Mat DIPlib::computeDFT(cv::Mat channel){
         cv::BORDER_CONSTANT,
         cv::Scalar::all(0)
     );
-    cv::Mat planes[2];
-    padded.convertTo(planes[0], CV_32F);
-    planes[1] = cv::Mat::zeros(padded.rows, padded.cols, CV_32F);
+    cv::Mat planes[] = { cv::Mat_<float>(padded), cv::Mat::zeros(padded.size(), CV_32F) };;
     cv::Mat complexI;
     // Add to the expanded another plane with zeros
     cv::merge(planes, 2, complexI);
@@ -505,6 +503,102 @@ cv::Mat DIPlib::computeMagnitude(cv::Mat complexI) {
     return DIPlib::fftShift(magI);
 }
 
+void DIPlib::FourierFilter(Image *image, int type, int distance){
+    
+    cv::Mat filter = image->freqData[0].complexI.clone();
+
+    switch (type) {
+        case IMG_FOURIER_LOW_PASS:
+            LowPassFilter(filter, distance);
+
+            break;
+        case IMG_FOURIER_HIGH_PASS:
+            HighPassFilter(filter, distance);
+            break;
+    }
+
+    std::vector<cv::Mat> channelArray;
+    cv::Mat planes[2], imgOutput, filterOutput;
+
+    int i = 0;
+    for (auto channel : image->freqData) {
+        // rearrage quadrants
+        channel.complexI = fftShift(channel.complexI);
+
+        // multiply 2 spectrums
+        cv::mulSpectrums(channel.complexI, filter, channel.complexI, 0);
+
+        // rearrage quadrants
+        channel.complexI = fftShift(channel.complexI);
+
+        // compute inverse
+        idft(channel.complexI, channel.complexI);
+
+        split(channel.complexI, planes);
+        normalize(planes[0], imgOutput, 0, 255, cv::NORM_MINMAX);
+        imgOutput.convertTo(imgOutput, CV_8U);
+
+        channelArray.push_back(imgOutput);
+        //cv::imshow("High pass filter" + i++, imgOutput);
+    }
+
+    split(filter, planes);
+    normalize(planes[1], filterOutput, 0, 1, cv::NORM_MINMAX);
+
+    //cv::imshow("Filter", filterOutput);
+
+    FourierToImage(image, channelArray);
+}
+
+void DIPlib::LowPassFilter(const cv::Mat &fourierFilter, int distance) {
+    cv::Mat tmp = cv::Mat(fourierFilter.rows, fourierFilter.cols, CV_32F);
+
+    cv::Point centre = cv::Point(fourierFilter.rows / 2, fourierFilter.cols / 2);
+    double radius;
+
+    for (int i = 0; i < fourierFilter.rows; i++)
+    {
+        for (int j = 0; j < fourierFilter.cols; j++)
+        {
+            radius = (double)sqrt(pow((i - centre.x), 2.0) + pow((double)(j - centre.y), 2.0));
+            if (radius > distance) {
+                tmp.at<float>(i, j) = (float)0;
+            }
+            else {
+                tmp.at<float>(i, j) = (float)1;
+            }
+
+        }
+    }
+
+    cv::Mat toMerge[] = { tmp, tmp };
+    cv::merge(toMerge, 2, fourierFilter);
+}
+
+void DIPlib::HighPassFilter(const cv::Mat &fourierFilter, int distance) {
+    cv::Mat tmp = cv::Mat(fourierFilter.rows, fourierFilter.cols, CV_32F);
+
+    cv::Point centre = cv::Point(fourierFilter.rows / 2, fourierFilter.cols / 2);
+    double radius;
+
+    for (int i = 0; i < fourierFilter.rows; i++)
+    {
+        for (int j = 0; j < fourierFilter.cols; j++)
+        {
+            radius = (double)sqrt(pow((i - centre.x), 2.0) + pow((double)(j - centre.y), 2.0));
+            if (radius > distance) {
+                tmp.at<float>(i, j) = (float)1;
+            }
+            else {
+                tmp.at<float>(i, j) = (float)0;
+            }
+
+        }
+    }
+
+    cv::Mat toMerge[] = { tmp, tmp };
+    cv::merge(toMerge, 2, fourierFilter);
+}
 
 
 void DIPlib::IDFT(Image* image) {
@@ -516,11 +610,18 @@ void DIPlib::IDFT(Image* image) {
         inverseTransform.convertTo(inverseTransform, CV_8U);
         channelArray.push_back(inverseTransform);
     }
+    
+    FourierToImage(image, channelArray);
+
+}
+
+void DIPlib::FourierToImage(Image *image, std::vector<cv::Mat> channelArray) {
     cv::Mat mat;
     cv::merge(
         channelArray,
         mat
     );
+
     // Crop to original size
     cv::Rect crop_region(
         0,
@@ -541,5 +642,4 @@ void DIPlib::IDFT(Image* image) {
     image->canvas.Update(image->width, image->height);
     // Update GPU Texture
     DIPlib::UpdateTextureData(image);
-
 }
