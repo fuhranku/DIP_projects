@@ -37,6 +37,9 @@
 #define IMG_TRANSFORM_FLIP             0x000010
 #define	IMG_FOURIER_LOW_PASS		   0x000011
 #define	IMG_FOURIER_HIGH_PASS		   0x000012
+#define IMG_FLOODFILL_RG_FIXED		   0x000013
+#define IMG_FLOODFILL_RG_FLOATING	   0x000014
+
 
 
 struct Histogram {

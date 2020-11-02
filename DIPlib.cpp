@@ -600,7 +600,6 @@ void DIPlib::HighPassFilter(const cv::Mat &fourierFilter, int distance) {
     cv::merge(toMerge, 2, fourierFilter);
 }
 
-
 void DIPlib::IDFT(Image* image) {
     std::vector<cv::Mat> channelArray;
     cv::Mat inverseTransform;
@@ -643,3 +642,68 @@ void DIPlib::FourierToImage(Image *image, std::vector<cv::Mat> channelArray) {
     // Update GPU Texture
     DIPlib::UpdateTextureData(image);
 }
+
+void DIPlib::FloodFill(Image* image, int range_type, int nhbrhd_type, cv::Point seed, cv::Scalar newColor) {
+    //printf("(%f,%f,%f)\n", newColor[0], newColor[1], newColor[2]);
+
+
+        
+        cv::Point point;
+        DIPlib::FromWorldSpaceToImageSpace(
+            seed,
+            point,
+            image->width,
+            image->height
+        ); 
+        printf("image space point: (%i,%i)\n", point.x, point.y);
+        // 2d to 1d access equation: (totalWidth - 1) * Row + (col - 1)
+        int color_index = DIPlib::Reduce2DTo1DArray(point, image->width, image->height);
+        cv::Scalar picked_color = cv::Scalar(3);
+        picked_color[0] = image->imgData.data[color_index];
+        picked_color[1] = image->imgData.data[color_index + 1];
+        picked_color[2] = image->imgData.data[color_index + 2];
+
+        // Color picked
+        printf("Color in pos picked: (%f,%f,%f)\n",
+            picked_color[0],
+            picked_color[1],
+            picked_color[2]);
+    
+    // Compute flood fill
+    //cv::floodFill(
+    //    image->imgData,
+    //    seed,
+    //    newColor,
+    //    0,
+    //    cv::Scalar(-30.0f,30.0f,),
+    //    cv::Scalar(-30.0f,30.0f,),
+
+
+    //);
+}
+
+void DIPlib::FromWorldSpaceToImageSpace(cv::Point src, cv::Point &dst, int width, int height) {
+    // moving from -(w/2) to (0,0) and -h/2 to -(0,0)
+    dst.x = src.x * 2 + width;
+    dst.y = src.y * 2 + height;
+}
+
+bool DIPlib::IsInsideImage(Image* image, cv::Point pos) {
+    if (pos.x >= -image->width  / 2  &&
+        pos.x <=  image->width  / 2  &&
+        pos.y >= -image->height / 2  &&
+        pos.y <=  image->height / 2)
+            return true;
+    return false;
+}
+
+cv::Scalar DIPlib::DenormalizeBGR(cv::Scalar normBGR){
+
+    cv::Scalar  denormBGR(3);
+    denormBGR[0] = round(normBGR[0] * 255.0f);
+    denormBGR[1] = round(normBGR[1] * 255.0f);
+    denormBGR[2] = round(normBGR[2] * 255.0f);
+    
+    return denormBGR;
+}
+

@@ -9,6 +9,7 @@ float thresh = 0.0f, maxValue = 255.0f;
 
 
 UI::UI() {
+	floodFill_color = cv::Scalar(0.89019f, 0.06274f, 0.83529f);
 }
 
 bool UI::init(GLFWwindow* window) {
@@ -71,6 +72,35 @@ void UI::drawSidebar() {
 				ImGui::Text("Histogram information: ");
 				drawHistograms();
 				ImGui::TreePop();
+			}
+			ImGui::Dummy(ImVec2(0, 10.0f));
+			ImGui::Separator();
+			ImGui::Dummy(ImVec2(0, 10.0f));
+			ImGui::Checkbox("Flood fill", &flood_fill_bool);
+			if(flood_fill_bool){
+				ImGui::SetNextItemOpen(true);
+				ImGui::Text("Configuration");
+				ImGui::Indent();
+				ImGui::Text("Range type: ");
+				ImGui::RadioButton("Fixed##fixed_range", &floodfill_range_selected, IMG_FLOODFILL_RG_FIXED);
+				ImGui::SameLine();
+				ImGui::RadioButton("Floating##floating_range", &floodfill_range_selected, IMG_FLOODFILL_RG_FLOATING);
+				ImGui::Text("Neighborhood: ");
+				const char* nhbrhd_options[] = {
+					"4 elements",
+					"8 elements",
+				};
+				ImGui::Combo("##color_bits_reduction", &nhbrhd_elements_count, nhbrhd_options, IM_ARRAYSIZE(nhbrhd_options));
+				ImGui::Dummy(ImVec2(0, 10.0f));
+				ImGui::Text("Flooding color: ");
+				static float color[] = { floodFill_color[0],floodFill_color[1],floodFill_color[2]};
+				ImGui::ColorPicker3("##color_picker", &color[0]);
+				floodFill_color = cv::Scalar(
+					color[0],
+					color[1],
+					color[2]
+				);
+
 			}
 		}
 	}

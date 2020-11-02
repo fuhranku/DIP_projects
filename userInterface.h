@@ -1,6 +1,7 @@
 #pragma once
 #include <imgui.hpp>
 #include <string>
+#include "Image.h"
 
 class UI{
 public:
@@ -9,6 +10,10 @@ public:
 	void mainDraw();
 	void terminate();
 	std::string activeModal = "";
+	bool flood_fill_bool = 0;
+	int floodfill_range_selected = IMG_FLOODFILL_RG_FIXED;
+	int nhbrhd_elements_count = 0;
+	cv::Scalar floodFill_color;
 private:
 	void drawModals();
 	void drawTopMenu();
