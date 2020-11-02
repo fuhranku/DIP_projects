@@ -89,30 +89,34 @@ void Application::OnMouseButton(GLFWwindow* window, int button, int action, int 
 
         // Compute flood fill
         cv::Point mousePos = cv::Point(
-            mouse_world_space.x,
-            mouse_world_space.y
+            mouse_pos_near_world.x,
+            mouse_pos_near_world.y
         );
-            printf("(%i,%i)\n",
-                mousePos.x,
-                mousePos.y
-            );
+
+
+        printf("(%i,%i)\n",
+            mousePos.x,
+            mousePos.y
+        );
+
+
         if (Application::GetInstance()->ui.flood_fill_bool &&
             DIPlib::IsInsideImage(Application::GetInstance()->image, mousePos))
         {
-            //DIPlib::FloodFill(
-            //    Application::GetInstance()->image,
-            //    Application::GetInstance()->ui.floodfill_range_selected,
-            //    Application::GetInstance()->ui.nhbrhd_elements_count,
-            //    cv::Point(
-            //        mouse_pos_far_world.x,
-            //        mouse_pos_far_world.y
-            //    ),
-            //    DIPlib::DenormalizeBGR(
-            //        DIPlib::RGB2BGR(
-            //            Application::GetInstance()->ui.floodFill_color
-            //        )
-            //    )
-            //);
+            DIPlib::FloodFill(
+                Application::GetInstance()->image,
+                Application::GetInstance()->ui.floodfill_range_selected,
+                Application::GetInstance()->ui.nhbrhd_elements_count,
+                cv::Point(
+                    mouse_pos_far_world.x,
+                    mouse_pos_far_world.y
+                ),
+                DIPlib::DenormalizeBGR(
+                    DIPlib::RGB2BGR(
+                        Application::GetInstance()->ui.floodFill_color
+                    )
+                )
+            );
         }
 
     }

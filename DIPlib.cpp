@@ -645,29 +645,30 @@ void DIPlib::FourierToImage(Image *image, std::vector<cv::Mat> channelArray) {
 
 void DIPlib::FloodFill(Image* image, int range_type, int nhbrhd_type, cv::Point seed, cv::Scalar newColor) {
     //printf("(%f,%f,%f)\n", newColor[0], newColor[1], newColor[2]);
-
-
         
-        cv::Point point;
-        DIPlib::FromWorldSpaceToImageSpace(
-            seed,
-            point,
-            image->width,
-            image->height
-        ); 
-        printf("image space point: (%i,%i)\n", point.x, point.y);
-        // 2d to 1d access equation: (totalWidth - 1) * Row + (col - 1)
-        int color_index = DIPlib::Reduce2DTo1DArray(point, image->width, image->height);
-        cv::Scalar picked_color = cv::Scalar(3);
-        picked_color[0] = image->imgData.data[color_index];
-        picked_color[1] = image->imgData.data[color_index + 1];
-        picked_color[2] = image->imgData.data[color_index + 2];
+    cv::Point point;
+    DIPlib::FromWorldSpaceToImageSpace(
+        seed,
+        point,
+        image->width,
+        image->height
+    ); 
 
-        // Color picked
-        printf("Color in pos picked: (%f,%f,%f)\n",
-            picked_color[0],
-            picked_color[1],
-            picked_color[2]);
+
+    printf("image space point: (%i,%i)\n", point.x, point.y);
+
+    // 2d to 1d access equation: (totalWidth - 1) * Row + (col - 1)
+    int color_index = DIPlib::Reduce2DTo1DArray(point, image->width, image->height);
+    cv::Scalar picked_color = cv::Scalar(3);
+    picked_color[0] = image->imgData.data[color_index];
+    picked_color[1] = image->imgData.data[color_index + 1];
+    picked_color[2] = image->imgData.data[color_index + 2];
+
+    // Color picked
+    printf("Color in pos picked: (%f,%f,%f)\n",
+        picked_color[0],
+        picked_color[1],
+        picked_color[2]);
     
     // Compute flood fill
     //cv::floodFill(
@@ -684,8 +685,8 @@ void DIPlib::FloodFill(Image* image, int range_type, int nhbrhd_type, cv::Point 
 
 void DIPlib::FromWorldSpaceToImageSpace(cv::Point src, cv::Point &dst, int width, int height) {
     // moving from -(w/2) to (0,0) and -h/2 to -(0,0)
-    dst.x = src.x * 2 + width;
-    dst.y = src.y * 2 + height;
+    dst.x = src.x + width/2;
+    dst.y = -(src.y - height/2);
 }
 
 bool DIPlib::IsInsideImage(Image* image, cv::Point pos) {
