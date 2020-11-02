@@ -11,7 +11,7 @@
 class Grid {
 public:
 	unsigned int gridVAO, gridVBO, gridIBO, gridLength;
-	Grid(int width, int height);
+	Grid(glm::vec2 halfWidth, glm::vec2 halfHeight);
 	Grid();
 	void Init();
 	void Draw(glm::mat4 viewMatrix, glm::mat4 orthoMatrix);
@@ -23,10 +23,11 @@ public:
 	unsigned int VAO;
 	unsigned int VBO;
 	int width, height;
+	glm::vec2 arrhalfWidth, arrhalfHeight;
 	Grid grid;
 	std::vector<float> vertices;
 	Canvas();
-	void Build(int width, int height);
+	void Build(int width, int height, glm::vec2 arrhalfWidth, glm::vec2 arrhalfHeight);
 	void Update(int width, int height);
 	void Delete();
 private:

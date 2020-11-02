@@ -60,56 +60,44 @@ void Application::OnMouseButton(GLFWwindow* window, int button, int action, int 
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
         double xpos, ypos;
+        int pixel_w, pixel_h;
         // Step 0: 2d Viewport Coordinates
         glfwGetCursorPos(window, &xpos, &ypos);
+        // better use the callback and cache the values 
+        glfwGetFramebufferSize(window, &pixel_w, &pixel_h); 
+        glfwGetCursorPos(window, &xpos, &ypos);
+        glm::vec2 screen_pos = glm::vec2(xpos, ypos);
+        glm::vec2 pixel_pos = screen_pos * glm::vec2(pixel_w, pixel_h) / glm::vec2(windowWidth, windowHeight); // note: not necessarily integer
+        pixel_pos = pixel_pos + glm::vec2(0.5f, 0.5f); // shift to GL's center convention
+       
+        glm::vec3 win = glm::vec3(pixel_pos.x, pixel_h - pixel_pos.y, 0.0f);
         
-        // Step 1: From Screen Space to Clip Space
-        float mouse_pos_x_clip = xpos / (windowWidth * 0.8f) * 2 - 1;
-        float mouse_pos_y_clip = -(ypos / windowHeight * 2 - 1);
-
-        //printf("(%f,%f) \n", mouse_pos_x_clip, mouse_pos_y_clip);
-
-        glm::vec4 mouse_pos_near_clip = glm::vec4(mouse_pos_x_clip, mouse_pos_y_clip, 1, 1);
-        glm::vec4 mouse_pos_far_clip = glm::vec4(mouse_pos_x_clip, mouse_pos_y_clip, -1, 1);
-
-        // Step 2: Compute inverse view and projection matrices
-        glm::mat4 M_wv = camera.getWorldToViewMatrix();
-        glm::mat4 M_vc = camera.getOrthoMatrix();
-
-        glm::mat4 M_vw = glm::inverse(M_wv);
-        glm::mat4 M_cv = glm::inverse(M_vc);
-
-        // Step 3: From Clip to View Space
-        glm::vec4 mouse_pos_near_view = M_cv * mouse_pos_near_clip;
-        glm::vec4 mouse_pos_far_view = M_cv * mouse_pos_far_clip;
-
-        // Step 4: From View to World Space
-        glm::vec4 mouse_pos_near_world = M_vw * mouse_pos_near_view;
-        glm::vec4 mouse_pos_far_world = M_vw * mouse_pos_far_view;
-
-        // Compute flood fill
-        cv::Point mousePos = cv::Point(
-            mouse_pos_near_world.x,
-            mouse_pos_near_world.y
+        glm::vec3 mousePos = glm::unProject(win,
+            camera.getWorldToViewMatrix(),
+            camera.getOrthoMatrix(),
+            glm::vec4(0, 0, windowWidth * 0.8f, windowHeight)
         );
 
-
-        printf("(%i,%i)\n",
-            mousePos.x,
-            mousePos.y
-        );
+        //printf("(%f,%f)\n",
+        //    mousePos.x,
+        //    mousePos.y
+        //);
 
 
         if (Application::GetInstance()->ui.flood_fill_bool &&
-            DIPlib::IsInsideImage(Application::GetInstance()->image, mousePos))
+            DIPlib::IsInsideImage(Application::GetInstance()->image, cv::Point(mousePos.x,mousePos.y)))
         {
+            //printf("(%f,%f)\n",
+            //    mousePos.x,
+            //    mousePos.y
+            //);
             DIPlib::FloodFill(
                 Application::GetInstance()->image,
                 Application::GetInstance()->ui.floodfill_range_selected,
                 Application::GetInstance()->ui.nhbrhd_elements_count,
                 cv::Point(
-                    mouse_pos_far_world.x,
-                    mouse_pos_far_world.y
+                    mousePos.x,
+                    mousePos.y
                 ),
                 DIPlib::DenormalizeBGR(
                     DIPlib::RGB2BGR(

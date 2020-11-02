@@ -33,8 +33,10 @@ public:
 	static void FourierFilter(Image *image, int type, int distance);
 	static void FloodFill(Image* image, int range_type, int nhbrhd_type, cv::Point seed, cv::Scalar newColor);
 	static bool IsInsideImage(Image* image, cv::Point pos);
-	static void FromWorldSpaceToImageSpace(cv::Point src, cv::Point &dst, int width, int height);
-	inline static int Reduce2DTo1DArray(cv::Point src, int width, int height) { return (width + 1) * src.y + src.x; };
+	static void FromWorldSpaceToImageSpace(cv::Point src, cv::Point &dst, Image* image);
+	inline static int Reduce2DTo1DArray(cv::Point src, int step, int channel) {
+		return src.y * step + channel * src.x;
+	};
 	inline static cv::Scalar RGB2BGR(cv::Scalar rgbColor){ return cv::Scalar(rgbColor[2], rgbColor[1], rgbColor[0]); }
 	static cv::Scalar DenormalizeBGR(cv::Scalar normBGR);
 };

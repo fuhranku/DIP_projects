@@ -7,20 +7,19 @@ Canvas::Canvas(){
     height = 0;
 }
 
-void Canvas::Build(int width, int height) {
+void Canvas::Build(int width, int height, glm::vec2 arrhalfWidth, glm::vec2 arrhalfHeight) {
     this->width = width;
     this->height = height;
-
-    float halfWidth = this->width / 2;
-    float halfHeight = this->height / 2;
+    this->arrhalfWidth = arrhalfWidth;
+    this->arrhalfHeight = arrhalfHeight;
 
     vertices = 
     {
         // positions                              // texture Coords
-        -halfWidth,  halfHeight, 0.0f, 0.0f, 1.0f,
-        -halfWidth, -halfHeight, 0.0f, 0.0f, 0.0f,
-         halfWidth,  halfHeight, 0.0f, 1.0f, 1.0f,
-         halfWidth, -halfHeight, 0.0f, 1.0f, 0.0f,
+        -arrhalfWidth[0],  arrhalfHeight[1], 0.0f, 0.0f, 1.0f,
+        -arrhalfWidth[0], -arrhalfHeight[0], 0.0f, 0.0f, 0.0f,
+         arrhalfWidth[1],  arrhalfHeight[1], 0.0f, 1.0f, 1.0f,
+         arrhalfWidth[1], -arrhalfHeight[0], 0.0f, 1.0f, 0.0f,
     };
 
     // Setup plane VAO
@@ -39,7 +38,7 @@ void Canvas::Build(int width, int height) {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
     // Compute Grid
-    grid = Grid(this->width,this->height);
+    grid = Grid(arrhalfWidth, arrhalfHeight);
 }
 
 void Canvas::Delete() {
@@ -51,29 +50,32 @@ void Canvas::Delete() {
 
 void Canvas::Update(int width, int height) {
     Delete();
-    Build(width, height);
+    Build(width, height, arrhalfWidth, arrhalfHeight);
 }
 
 Grid::Grid() {
 
 }
 
-Grid::Grid(int width, int height){ 
+Grid::Grid(glm::vec2 halfWidth, glm::vec2 halfHeight){ 
     // Load Grid Shader
     gridShader = new Shader("assets/shaders/gridShader.vert", "assets/shaders/gridShader.frag");
+
+    int width = halfWidth[0] + halfWidth[1];
+    int height = halfHeight[0] + halfHeight[1];
 
     std::vector<glm::vec3> vertices;
     std::vector<glm::uvec4> indices;
 
-    for (int j = -(height / 2); j <= height / 2; ++j) {
-        for (int i = -(width / 2); i <= width / 2; ++i) {
+    for (int j = -halfHeight[0]; j <= halfHeight[1]; ++j) {
+        for (int i = -halfWidth[0]; i <= halfWidth[1]; ++i) {
             float x = (float)i;
             float y = (float)j;
             vertices.push_back(glm::vec3(x, y, 0.014));
         }
     }
 
-    for (int j = 0; j < height-1; ++j) {  
+    for (int j = 0; j < height; ++j) {  
         for (int i = 0; i < width; ++i) {
 
             int row1 = j * (width + 1);

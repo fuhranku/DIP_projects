@@ -22,6 +22,9 @@ Image::Image(const char *path) {
         height = imgData.rows;
         channels = imgData.channels();
 
+        // Compute Half size of image
+        computeHalfSize();
+
         // Compute DPI
         dpi = (int)glm::round((float)width * 25.4 / (float)(width * 0.264583));
         cv::flip(imgData, imgData, 0);
@@ -57,7 +60,7 @@ Image::Image(const char *path) {
         // Creates the texture mipmaps
         glGenerateMipmap(GL_TEXTURE_2D);
         // Compute canvas
-        canvas.Build(width,height);
+        canvas.Build(width, height, arrhalfWidth, arrhalfHeight);
     }
     else {
         std::cout << "ERROR::Image empty" << std::endl;
@@ -100,6 +103,9 @@ Image::Image(const char* path, int colorSpace) {
         height = imgData.rows;
         channels = imgData.channels();
 
+        // Compute Half size of image
+        computeHalfSize();
+
         // Compute Size
         size = Size(width*height, channels);
 
@@ -141,7 +147,7 @@ Image::Image(const char* path, int colorSpace) {
         glGenerateMipmap(GL_TEXTURE_2D);
 
         // Compute canvas
-        canvas.Build(width, height);
+        canvas.Build(width, height, arrhalfWidth, arrhalfHeight);
     }
     else {
         std::cout << "ERROR::Image empty" << std::endl;
@@ -182,4 +188,21 @@ void Image::cloneImage(Image* src, Image* dst) {
     dst->size = src->size;
     dst->freqComputed = src->freqComputed;
     dst->freqData = src->freqData;
+}
+
+void Image::computeHalfSize() {
+    float halfWidth = width / 2;
+    float halfHeight = height / 2;
+    if (this->width % 2 != 0) {
+        arrhalfWidth[0] = halfWidth;
+        arrhalfWidth[1] = halfWidth + 1;
+    }
+    else
+        arrhalfWidth[0] = arrhalfWidth[1] = halfWidth;
+    if (this->height % 2 != 0) {
+        arrhalfHeight[0] = halfHeight;
+        arrhalfHeight[1] = halfHeight + 1;
+    }
+    else
+        arrhalfHeight[0] = arrhalfHeight[1] = halfHeight;
 }

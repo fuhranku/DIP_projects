@@ -111,6 +111,7 @@ class Image
 {
 private:
 	void getFileExtension(std::string path);
+	void computeHalfSize();
 public:
 	Image(const char* path);
 	Image(const char* path, int colorSpace);
@@ -120,6 +121,7 @@ public:
 	std::vector<Histogram> histogram;
 	std::vector<FreqData> freqData;
 	cv::Mat imgData;
+	glm::vec2 arrhalfWidth, arrhalfHeight;
 	int width;
 	int height;
 	int channels;
