@@ -25,7 +25,6 @@ public:
     Camera(int windowWidth, int windowHeight);
     glm::mat4 getWorldToViewMatrix();
     glm::mat4 getOrthoMatrix();
-    void mouseUpdate(const glm::vec2& newMousePosition);
     void moveForward(float time);
     void moveBackward(float time);
     void moveLeft(float time);

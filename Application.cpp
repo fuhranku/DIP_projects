@@ -66,7 +66,8 @@ void Application::OnMouseButton(GLFWwindow* window, int button, int action, int 
         // Step 1: From Screen Space to Clip Space
         float mouse_pos_x_clip = xpos / (windowWidth * 0.8f) * 2 - 1;
         float mouse_pos_y_clip = -(ypos / windowHeight * 2 - 1);
-        glm::vec3 mousePos_clip = glm::vec3(mouse_pos_x_clip, mouse_pos_y_clip,0.0f);
+
+        //printf("(%f,%f) \n", mouse_pos_x_clip, mouse_pos_y_clip);
 
         glm::vec4 mouse_pos_near_clip = glm::vec4(mouse_pos_x_clip, mouse_pos_y_clip, 1, 1);
         glm::vec4 mouse_pos_far_clip = glm::vec4(mouse_pos_x_clip, mouse_pos_y_clip, -1, 1);
