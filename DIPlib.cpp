@@ -353,7 +353,6 @@ void DIPlib::Rotate(Image* image, float deg) {
     // Update GPU Texture
     DIPlib::UpdateTextureData(image);
 
-    // Update history queue/stack
 }
 
 void DIPlib::Flip(Image* image, int mode) {
@@ -643,7 +642,9 @@ void DIPlib::FourierToImage(Image *image, std::vector<cv::Mat> channelArray) {
     DIPlib::UpdateTextureData(image);
 }
 
-void DIPlib::FloodFill(Image* image, int range_type, int nhbrhd_type, cv::Point seed, cv::Scalar newColor) {      
+void DIPlib::FloodFill(Image* image, int range_type, int nhbrhd_type, cv::Point seed, cv::Scalar newColor,
+    cv::Scalar loDiff, cv::Scalar upDiff) {      
+
     cv::Point point;
     DIPlib::FromWorldSpaceToImageSpace(
         seed,
@@ -652,23 +653,30 @@ void DIPlib::FloodFill(Image* image, int range_type, int nhbrhd_type, cv::Point 
     ); 
 
     // 2d to 1d access equation
+    point = cv::Point(point.x - 1, point.y - 1);
     int color_index = DIPlib::Reduce2DTo1DArray(point, image->imgData.step, image->channels);
     cv::Scalar picked_color = cv::Scalar(3);
     picked_color[0] = image->imgData.data[color_index + 0];
     picked_color[1] = image->imgData.data[color_index + 1];
     picked_color[2] = image->imgData.data[color_index + 2];
-    
+
+    int range[] = { 4, 8 };
+    int nhbrhd[] = { 0 , cv::FLOODFILL_FIXED_RANGE };
+
     // Compute flood fill
     cv::floodFill(
         image->imgData,
         point,
         newColor,
         0,
-        cv::Scalar(5,5,5,5),
-        cv::Scalar(5,5,5,5)
+        loDiff,
+        upDiff,
+        range[range_type] |
+        nhbrhd[nhbrhd_type]
     );
 
-    cv::imshow("Flooded", image->imgData);
+    // Update GPU Texture
+    DIPlib::UpdateTextureData(image);
 }
 
 void DIPlib::FromWorldSpaceToImageSpace(cv::Point src, cv::Point &dst, Image* image) {

@@ -57,7 +57,13 @@ void Application::OnMouseMotion(GLFWwindow* window, double xpos, double ypos)
 }
 
 void Application::OnMouseButton(GLFWwindow* window, int button, int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    ImGuiIO& io = ImGui::GetIO();
+
+    // Check if ImGui is letting pass mouse pos 
+    if (io.WantCaptureMouse) return;
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS &&
+        glfwGetKey(window, GLFW_KEY_SPACE) != GLFW_PRESS )
     {
         double xpos, ypos;
         int pixel_w, pixel_h;
@@ -78,19 +84,14 @@ void Application::OnMouseButton(GLFWwindow* window, int button, int action, int 
             glm::vec4(0, 0, windowWidth * 0.8f, windowHeight)
         );
 
-        //printf("(%f,%f)\n",
-        //    mousePos.x,
-        //    mousePos.y
-        //);
-
-
+        // Flood filling 
         if (Application::GetInstance()->ui.flood_fill_bool &&
             DIPlib::IsInsideImage(Application::GetInstance()->image, cv::Point(mousePos.x,mousePos.y)))
         {
-            //printf("(%f,%f)\n",
-            //    mousePos.x,
-            //    mousePos.y
-            //);
+            // Save current Action on history
+            Application::GetInstance()->image->currentFilter = IMG_FLOODFILL;
+            History::PushAction(Application::GetInstance()->image);
+
             DIPlib::FloodFill(
                 Application::GetInstance()->image,
                 Application::GetInstance()->ui.floodfill_range_selected,
@@ -103,7 +104,15 @@ void Application::OnMouseButton(GLFWwindow* window, int button, int action, int 
                     DIPlib::RGB2BGR(
                         Application::GetInstance()->ui.floodFill_color
                     )
-                )
+                ),
+                cv::Scalar(Application::GetInstance()->ui.loDiff.x,
+                    Application::GetInstance()->ui.loDiff.y,
+                    Application::GetInstance()->ui.loDiff.z,
+                    Application::GetInstance()->ui.loDiff.w),
+                cv::Scalar(Application::GetInstance()->ui.upDiff.x,
+                    Application::GetInstance()->ui.upDiff.y,
+                    Application::GetInstance()->ui.upDiff.z,
+                    Application::GetInstance()->ui.upDiff.w)
             );
         }
 
@@ -111,6 +120,11 @@ void Application::OnMouseButton(GLFWwindow* window, int button, int action, int 
 }
 
 void Application::OnKeyPress(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    ImGuiIO& io = ImGui::GetIO();
+
+    // Check if ImGui is letting pass keyboard pos 
+    if (io.WantCaptureKeyboard) return;
+
     // Move Forward
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
         camera.moveForward(Application::GetInstance()->deltaTime);
@@ -174,6 +188,11 @@ void Application::OnMouseScroll(GLFWwindow* window, double posX, double posY) {
 
 void Application::ProcessKeyboardInput(GLFWwindow* window)
 {
+    ImGuiIO& io = ImGui::GetIO();
+
+    // Check if ImGui is letting pass keyboard pos 
+    if (io.WantCaptureKeyboard) return;
+
     float MOVEMENT_SPEED = 10.0f;
     float speed = MOVEMENT_SPEED * deltaTime;
     // Checks if the escape key is pressed

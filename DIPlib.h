@@ -31,7 +31,8 @@ public:
 	static void DFT(Image* image);
 	static void IDFT(Image* image);
 	static void FourierFilter(Image *image, int type, int distance);
-	static void FloodFill(Image* image, int range_type, int nhbrhd_type, cv::Point seed, cv::Scalar newColor);
+	static void FloodFill(Image* image, int range_type, int nhbrhd_type, cv::Point seed,
+	cv::Scalar newColor, cv::Scalar loDiff, cv::Scalar upDiff);
 	static bool IsInsideImage(Image* image, cv::Point pos);
 	static void FromWorldSpaceToImageSpace(cv::Point src, cv::Point &dst, Image* image);
 	inline static int Reduce2DTo1DArray(cv::Point src, int step, int channel) {

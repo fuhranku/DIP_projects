@@ -11,8 +11,9 @@ public:
 	void terminate();
 	std::string activeModal = "";
 	bool flood_fill_bool = 0;
-	int floodfill_range_selected = IMG_FLOODFILL_RG_FIXED;
+	int floodfill_range_selected = 0;
 	int nhbrhd_elements_count = 0;
+	glm::ivec4 loDiff, upDiff;
 	cv::Scalar floodFill_color;
 private:
 	void drawModals();
