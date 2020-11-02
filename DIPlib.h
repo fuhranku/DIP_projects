@@ -35,7 +35,7 @@ public:
 	static bool IsInsideImage(Image* image, cv::Point pos);
 	static void FromWorldSpaceToImageSpace(cv::Point src, cv::Point &dst, Image* image);
 	inline static int Reduce2DTo1DArray(cv::Point src, int step, int channel) {
-		return src.y * step + channel * src.x;
+		return src.y * step * channel + src.x * channel;
 	};
 	inline static cv::Scalar RGB2BGR(cv::Scalar rgbColor){ return cv::Scalar(rgbColor[2], rgbColor[1], rgbColor[0]); }
 	static cv::Scalar DenormalizeBGR(cv::Scalar normBGR);

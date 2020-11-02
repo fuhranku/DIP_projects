@@ -651,24 +651,35 @@ void DIPlib::FloodFill(Image* image, int range_type, int nhbrhd_type, cv::Point 
         image
     ); 
 
+    printf("point: (%i,%i) \n", point.x, point.y);
+    cv::Point newPoint = cv::Point(point.x - 1, image->imgData.rows - point.y);
+    printf("point: (%i,%i) \n", newPoint.x, newPoint.y);
+
     // 2d to 1d access equation
-    int color_index = DIPlib::Reduce2DTo1DArray(point, image->imgData.step, image->channels);
+    int color_index = DIPlib::Reduce2DTo1DArray(point, image->imgData.cols, image->channels);
     cv::Scalar picked_color = cv::Scalar(3);
     picked_color[0] = image->imgData.data[color_index + 0];
     picked_color[1] = image->imgData.data[color_index + 1];
     picked_color[2] = image->imgData.data[color_index + 2];
+
+    printf("picked color: (%i,%i,%i) \n", image->imgData.data[color_index + 0],
+        image->imgData.data[color_index + 1], image->imgData.data[color_index + 2]);
+
+
+    cv::Mat floodFillTest = image->imgData.clone();
+    cv::flip(floodFillTest, floodFillTest, 0);
     
     // Compute flood fill
     cv::floodFill(
-        image->imgData,
-        point,
+        floodFillTest,
+        newPoint,
         newColor,
         0,
         cv::Scalar(5,5,5,5),
         cv::Scalar(5,5,5,5)
     );
 
-    cv::imshow("Flooded", image->imgData);
+    cv::imshow("Flooded", floodFillTest);
 }
 
 void DIPlib::FromWorldSpaceToImageSpace(cv::Point src, cv::Point &dst, Image* image) {
