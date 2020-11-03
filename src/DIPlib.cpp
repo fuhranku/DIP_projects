@@ -710,3 +710,23 @@ cv::Scalar DIPlib::DenormalizeBGR(cv::Scalar normBGR){
     return denormBGR;
 }
 
+
+void DIPlib::Morphology(Image* image, int op, int elementType ,int kernelSize, cv::Mat element) {
+    
+    if (elementType != 3)
+        element = cv::getStructuringElement(
+            elementType,
+            cv::Size(kernelSize, kernelSize),
+            cv::Point(kernelSize/2 + 1, kernelSize/2 + 1)
+        );
+
+
+    cv::morphologyEx(image->imgData,
+                     image->imgData,
+                     op,
+                     element);
+
+
+    //Update texture data
+    UpdateTextureData(image);
+}

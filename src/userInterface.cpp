@@ -278,6 +278,11 @@ void UI::drawTopMenu() {
 			}
 			popDisable(!freqComputed);
 
+			if (ImGui::MenuItem("Morphology")) {
+				activeModal = "Morphology##morphology_modal";
+			}
+
+
 			ImGui::EndMenu();
 		}
 		popDisable(!Application::GetInstance()->imageLoaded);
@@ -618,6 +623,97 @@ void UI::drawModals() {
 			History::PushAction(Application::GetInstance()->image);
 			// Perform Action
 			DIPlib::Rotate(Application::GetInstance()->image, deg*label);
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(80, 30))) {
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+
+		ImGui::EndPopup();
+	}
+
+	// Morphology
+	ImGui::SetNextWindowSize(ImVec2(300, 150));
+	if (ImGui::BeginPopupModal("Morphology##morphology_modal"))
+	{
+		const char* morphologyOptions[] = {
+		"Erosion",
+		"Dilation",
+		"Open",
+		"Close"
+		};
+
+		const cv::MorphTypes morphologyInt[] = {
+			cv::MORPH_ERODE,
+			cv::MORPH_DILATE,
+			cv::MORPH_OPEN,
+			cv::MORPH_CLOSE
+		};
+
+		static int currentMorphologyOption = 0;
+		ImGui::Combo("##morphology_type", &currentMorphologyOption, morphologyOptions, IM_ARRAYSIZE(morphologyOptions));
+
+		//structuring element type
+		const char* elementOptions[] = {
+		"Rect",
+		"Cross",
+		"Ellipse",
+		"Arbitrary",
+		};
+
+		const int elementInt[] = {
+			cv::MORPH_RECT,
+			cv::MORPH_CROSS,
+			cv::MORPH_ELLIPSE,
+			3
+		};
+
+		static int currentElementOption = 0;
+		ImGui::Combo("##element_type", &currentElementOption, elementOptions, IM_ARRAYSIZE(elementOptions));
+
+		//Kernel Size
+		static int kernelSize = 3;
+		ImGui::Text("Kernel size: ");
+		ImGui::DragInt("##kernel_morph", &kernelSize, 2, 3, 101);
+		kernelSize % 2 == 0 ? kernelSize++ : kernelSize;
+
+		cv::Mat element;
+		if (currentElementOption == 3) {
+			//User write it's own structuring element
+			element = cv::Mat();
+		}
+
+		if (ImGui::Button("OK", ImVec2(80, 30))) {
+
+			switch (currentMorphologyOption) {
+				case 0:
+					Application::GetInstance()->image->currentFilter = IMG_MORPHOLOGY_OPEN;
+					break;
+				case 1:
+					Application::GetInstance()->image->currentFilter = IMG_MORPHOLOGY_CLOSE;
+					break;
+				case 2:
+					Application::GetInstance()->image->currentFilter = IMG_MORPHOLOGY_EROSION;
+					break;
+				case 3:
+					Application::GetInstance()->image->currentFilter = IMG_MORPHOLOGY_DILATION;
+					break;
+			}
+			
+			History::PushAction(Application::GetInstance()->image);
+
+			// Perform Action
+			DIPlib::Morphology(
+				Application::GetInstance()->image,
+				morphologyInt[currentMorphologyOption],
+				elementInt[currentElementOption],
+				kernelSize,
+				element);
+
+
 			ImGui::CloseCurrentPopup();
 			activeModal = "";
 		}

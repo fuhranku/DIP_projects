@@ -19,6 +19,7 @@ private:
 	static cv::Mat computeMagnitude(cv::Mat complexI);
 public:
 	static void Histograms(Image* image);
+	static void Morphology(Image* image, int op, int elementType, int kernelSize, cv::Mat element = cv::Mat());
 	static void UpdateTextureData(Image* image);
 	static void OTSU(double thresh, double maxValue, Image* image);
 	static void GaussianAdaptiveThreshold(double thresh, double maxValue, Image* image);
