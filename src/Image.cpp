@@ -193,6 +193,7 @@ void Image::cloneImage(Image* src, Image* dst) {
 void Image::computeHalfSize() {
     float halfWidth = width / 2;
     float halfHeight = height / 2;
+
     if (this->width % 2 != 0) {
         arrhalfWidth[0] = halfWidth;
         arrhalfWidth[1] = halfWidth + 1;

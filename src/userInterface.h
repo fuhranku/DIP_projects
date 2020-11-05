@@ -11,6 +11,7 @@ public:
 	void terminate();
 	std::string activeModal = "";
 	bool flood_fill_bool = 0;
+	bool paint_mode = true;
 	int floodfill_range_selected = 0;
 	int nhbrhd_elements_count = 0;
 	glm::ivec4 loDiff, upDiff;

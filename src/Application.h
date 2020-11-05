@@ -25,6 +25,7 @@ class Application {
 	float totalTime = 0;
 	glm::vec2 currentMousePos = glm::vec2(0,0);
 	glm::vec2 lastMousePos;
+	glm::vec2 mouseWorldPos;
 	int totalFrames = 0;
 	int fps = 0;
 	GLFWwindow* window; // Window pointer
@@ -41,6 +42,7 @@ private:
 	void ProcessKeyboardInput(GLFWwindow* window);
 	void CalcDeltaTime();
 	void UpdateCursorPos();
+	void Screen2WorldCursorPos();
 	Application();
 	~Application();
 public:

@@ -18,6 +18,7 @@ private:
 	static cv::Mat fftShift(cv::Mat complexI);
 	static cv::Mat computeMagnitude(cv::Mat complexI);
 public:
+	static void SetColorOnImage(Image* image, glm::ivec3 color, cv::Point pos);
 	static void Histograms(Image* image);
 	static void Morphology(Image* image, int op, int elementType, int kernelSize, cv::Mat element = cv::Mat());
 	static void UpdateTextureData(Image* image);

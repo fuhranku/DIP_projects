@@ -65,28 +65,11 @@ void Application::OnMouseButton(GLFWwindow* window, int button, int action, int 
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS &&
         glfwGetKey(window, GLFW_KEY_SPACE) != GLFW_PRESS )
     {
-        double xpos, ypos;
-        int pixel_w, pixel_h;
-        // Step 0: 2d Viewport Coordinates
-        glfwGetCursorPos(window, &xpos, &ypos);
-        // better use the callback and cache the values 
-        glfwGetFramebufferSize(window, &pixel_w, &pixel_h); 
-        glfwGetCursorPos(window, &xpos, &ypos);
-        glm::vec2 screen_pos = glm::vec2(xpos, ypos);
-        glm::vec2 pixel_pos = screen_pos * glm::vec2(pixel_w, pixel_h) / glm::vec2(windowWidth, windowHeight); // note: not necessarily integer
-        pixel_pos = pixel_pos + glm::vec2(0.5f, 0.5f); // shift to GL's center convention
-       
-        glm::vec3 win = glm::vec3(pixel_pos.x, pixel_h - pixel_pos.y, 0.0f);
-        
-        glm::vec3 mousePos = glm::unProject(win,
-            camera.getWorldToViewMatrix(),
-            camera.getOrthoMatrix(),
-            glm::vec4(0, 0, windowWidth * 0.8f, windowHeight)
-        );
-
+        glm::vec2 mouseWP = glm::vec2(Application::GetInstance()->mouseWorldPos.x,
+                                      Application::GetInstance()->mouseWorldPos.y);
         // Flood filling 
         if (Application::GetInstance()->ui.flood_fill_bool &&
-            DIPlib::IsInsideImage(Application::GetInstance()->image, cv::Point(mousePos.x,mousePos.y)))
+            DIPlib::IsInsideImage(Application::GetInstance()->image, cv::Point(mouseWP.x, mouseWP.y)))
         {
             // Save current Action on history
             Application::GetInstance()->image->currentFilter = IMG_FLOODFILL;
@@ -97,8 +80,8 @@ void Application::OnMouseButton(GLFWwindow* window, int button, int action, int 
                 Application::GetInstance()->ui.floodfill_range_selected,
                 Application::GetInstance()->ui.nhbrhd_elements_count,
                 cv::Point(
-                    mousePos.x,
-                    mousePos.y
+                    mouseWP.x,
+                    mouseWP.y
                 ),
                 DIPlib::DenormalizeBGR(
                     DIPlib::RGB2BGR(
@@ -236,6 +219,42 @@ void Application::ProcessKeyboardInput(GLFWwindow* window)
         camera.moveDir(deltaTime, dir);
     }
 
+
+    //Color painting
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS &&
+        imageLoaded && 
+        Application::GetInstance()->ui.paint_mode) {
+
+        if (DIPlib::IsInsideImage(Application::GetInstance()->image, cv::Point(mouseWorldPos.x, mouseWorldPos.y))) {
+            //printf("Color painting!! \n");
+            
+            DIPlib::SetColorOnImage(Application::GetInstance()->image,
+                                    glm::ivec3(255, 255, 255),
+                                    cv::Point(floor(mouseWorldPos.x), floor(mouseWorldPos.y)));
+        }
+    }
+}
+
+void Application::Screen2WorldCursorPos() {
+    double xpos, ypos;
+
+    int pixel_w, pixel_h;
+    // Step 0: 2d Viewport Coordinates
+    glfwGetCursorPos(window, &xpos, &ypos);
+    // better use the callback and cache the values 
+    glfwGetFramebufferSize(window, &pixel_w, &pixel_h);
+    glfwGetCursorPos(window, &xpos, &ypos);
+    glm::vec2 screen_pos = glm::vec2(xpos, ypos);
+    glm::vec2 pixel_pos = screen_pos * glm::vec2(pixel_w, pixel_h) / glm::vec2(windowWidth, windowHeight); // note: not necessarily integer
+    pixel_pos = pixel_pos + glm::vec2(0.5f, 0.5f); // shift to GL's center convention
+
+    glm::vec3 win = glm::vec3(pixel_pos.x, pixel_h - pixel_pos.y, 0.0f);
+
+    mouseWorldPos = glm::unProject(win,
+        camera.getWorldToViewMatrix(),
+        camera.getOrthoMatrix(),
+        glm::vec4(0, 0, windowWidth * 0.8f, windowHeight)
+    );
 }
 
 void Application::UpdateCursorPos() {
@@ -459,6 +478,9 @@ void Application::Update() {
     // Loop until something tells the window, that it has to be closed
     while (!glfwWindowShouldClose(window))
     {
+        //Calculate Screen to World Cursor Position
+        Screen2WorldCursorPos();
+
         // Update Cursor Position
         UpdateCursorPos();
 

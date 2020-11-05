@@ -653,7 +653,7 @@ void DIPlib::FloodFill(Image* image, int range_type, int nhbrhd_type, cv::Point 
     ); 
 
     // 2d to 1d access equation
-    point = cv::Point(point.x - 1, point.y - 1);
+    point = cv::Point(point.x, point.y);
     int color_index = DIPlib::Reduce2DTo1DArray(point, image->imgData.step, image->channels);
     cv::Scalar picked_color = cv::Scalar(3);
     picked_color[0] = image->imgData.data[color_index + 0];
@@ -681,14 +681,8 @@ void DIPlib::FloodFill(Image* image, int range_type, int nhbrhd_type, cv::Point 
 
 void DIPlib::FromWorldSpaceToImageSpace(cv::Point src, cv::Point &dst, Image* image) {
     // moving from -(w/2) to (0,0) and -h/2 to -(0,0)
-    if (src.x < 0)
-        dst.x = src.x + image->arrhalfWidth[0];
-    else
-        dst.x = src.x + image->arrhalfWidth[0];
-    if (src.y < 0)
-        dst.y = src.y + image->arrhalfHeight[0];
-    else
-        dst.y = src.y + image->arrhalfHeight[1];
+    dst.x = src.x + image->arrhalfWidth[0];
+    dst.y = src.y + image->arrhalfHeight[0];
 }
 
 bool DIPlib::IsInsideImage(Image* image, cv::Point pos) {
@@ -726,6 +720,30 @@ void DIPlib::Morphology(Image* image, int op, int elementType ,int kernelSize, c
                      op,
                      element);
 
+
+    //Update texture data
+    UpdateTextureData(image);
+}
+
+
+void DIPlib::SetColorOnImage(Image* image, glm::ivec3 color, cv::Point pos) {
+    //printf("WORLD: (%i,%i) \n", pos.x, pos.y);
+    cv::Point point;
+    DIPlib::FromWorldSpaceToImageSpace(
+        pos,
+        point,
+        image
+    );
+
+
+    // 2d to 1d access equation
+    point = cv::Point(point.x, point.y);
+    //printf("IMAGE: (%i,%i) \n", point.x, point.y);
+    int color_index = DIPlib::Reduce2DTo1DArray(point, image->imgData.step, image->channels);
+
+    image->imgData.data[color_index + 0] = color.r;
+    image->imgData.data[color_index + 1] = color.g;
+    image->imgData.data[color_index + 2] = color.b;
 
     //Update texture data
     UpdateTextureData(image);
