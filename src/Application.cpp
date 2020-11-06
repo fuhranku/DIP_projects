@@ -62,6 +62,18 @@ void Application::OnMouseButton(GLFWwindow* window, int button, int action, int 
     // Check if ImGui is letting pass mouse pos 
     if (io.WantCaptureMouse) return;
 
+    //if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE &&
+    //    Application::GetInstance()->imageLoaded &&
+    //    Application::GetInstance()->ui.paint_mode) {
+
+
+    //    printf("saving paint mode \n");
+    //    // Save current Action on history
+    //    Application::GetInstance()->image->currentFilter = IMG_PAINT;
+    //    History::PushAction(Application::GetInstance()->image);
+
+    //}
+
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS &&
         glfwGetKey(window, GLFW_KEY_SPACE) != GLFW_PRESS )
     {
@@ -232,6 +244,7 @@ void Application::ProcessKeyboardInput(GLFWwindow* window)
                                     cv::Point(floor(mouseWorldPos.x), floor(mouseWorldPos.y)));
         }
     }
+   
 }
 
 void Application::Screen2WorldCursorPos() {

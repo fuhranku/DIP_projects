@@ -735,15 +735,43 @@ void DIPlib::SetColorOnImage(Image* image, glm::ivec3 color, cv::Point pos) {
         image
     );
 
+    int gaussian[5][5] =
+    { {1,  4,  7,  4, 1},
+      {4, 16, 26, 16, 4},
+      {7, 26, 41, 26, 7},
+      {4, 16, 26, 16, 4},
+      {1,  4,  7,  4, 1} };
 
-    // 2d to 1d access equation
-    point = cv::Point(point.x, point.y);
-    //printf("IMAGE: (%i,%i) \n", point.x, point.y);
-    int color_index = DIPlib::Reduce2DTo1DArray(point, image->imgData.step, image->channels);
+    for (int x = point.x - 2, i = 0; x <= point.x + 2; x++,i++) {
+        for (int y = point.y - 2, j = 0; y <= point.y + 2; y++, j++) {
 
-    image->imgData.data[color_index + 0] = color.r;
-    image->imgData.data[color_index + 1] = color.g;
-    image->imgData.data[color_index + 2] = color.b;
+            //only paint inside image
+            if (x >= 0 && x < image->width && y >= 0 && y < image->height) {
+                cv::Point gaussianPoint = cv::Point(x, y);
+                // 2d to 1d access equation
+                int color_index = DIPlib::Reduce2DTo1DArray(gaussianPoint, image->imgData.step, image->channels);
+
+                glm::vec3 pixelColor = glm::vec3(
+                    image->imgData.data[color_index + 0],
+                    image->imgData.data[color_index + 1],
+                    image->imgData.data[color_index + 2]
+                );
+
+                glm::vec3 paintColor = glm::vec3(
+                    color.r,
+                    color.g,
+                    color.b
+                );
+
+                float t = (float)gaussian[i][j] / 41.0f;
+                glm::vec3 lerp = pixelColor * (1.f - t) + paintColor * t;;
+
+                image->imgData.data[color_index + 0] = (int)lerp.r;
+                image->imgData.data[color_index + 1] = (int)lerp.g;
+                image->imgData.data[color_index + 2] = (int)lerp.b;
+            }
+        }
+    }
 
     //Update texture data
     UpdateTextureData(image);
