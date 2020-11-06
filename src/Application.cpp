@@ -226,7 +226,6 @@ void Application::ProcessKeyboardInput(GLFWwindow* window)
         Application::GetInstance()->ui.paint_mode) {
 
         if (DIPlib::IsInsideImage(Application::GetInstance()->image, cv::Point(mouseWorldPos.x, mouseWorldPos.y))) {
-            //printf("Color painting!! \n");
             
             DIPlib::SetColorOnImage(Application::GetInstance()->image,
                                     glm::ivec3(255, 255, 255),

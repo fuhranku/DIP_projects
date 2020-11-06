@@ -110,6 +110,10 @@ void UI::drawSidebar() {
 				);
 
 			}
+			ImGui::Dummy(ImVec2(0, 10.0f));
+			ImGui::Separator();
+			ImGui::Dummy(ImVec2(0, 10.0f));
+			ImGui::Checkbox("Brush (experimental)", &paint_mode);
 		}
 	}
 	ImGui::End();
