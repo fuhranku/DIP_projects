@@ -1,4 +1,4 @@
-# Digital Image Processing App with OpenGL and OpenCV 4.40 - C++
+# Digital Image Processing App with OpenGL and OpenCV 4.4.0 - C++
 
 ## Developed by
 * Frank Ponte -  [@fuhranku](https://github.com/fuhranku)
