@@ -16,6 +16,7 @@ public:
 	int nhbrhd_elements_count = 0;
 	glm::ivec4 loDiff, upDiff;
 	cv::Scalar floodFill_color;
+	cv::Scalar brush_color;
 private:
 	void drawModals();
 	void drawTopMenu();

@@ -1,5 +1,7 @@
 #include "DIPlib.h"
 
+cv::Scalar DIPlib::brushColor = cv::Scalar(255, 255, 255);
+
 void DIPlib::Histograms(Image* image) {
     unsigned int totalBytes = image->width * image->height * image->channels;
     int red, green, blue, rgb8;
@@ -726,7 +728,7 @@ void DIPlib::Morphology(Image* image, int op, int elementType ,int kernelSize, c
 }
 
 
-void DIPlib::SetColorOnImage(Image* image, glm::ivec3 color, cv::Point pos) {
+void DIPlib::Brush(Image* image, cv::Point pos) {
     //printf("WORLD: (%i,%i) \n", pos.x, pos.y);
     cv::Point point;
     DIPlib::FromWorldSpaceToImageSpace(
@@ -758,21 +760,29 @@ void DIPlib::SetColorOnImage(Image* image, glm::ivec3 color, cv::Point pos) {
                 );
 
                 glm::vec3 paintColor = glm::vec3(
-                    color.r,
-                    color.g,
-                    color.b
+                    brushColor[0],
+                    brushColor[1],
+                    brushColor[2]
                 );
 
                 float t = (float)gaussian[i][j] / 41.0f;
-                glm::vec3 lerp = pixelColor * (1.f - t) + paintColor * t;;
+                glm::vec3 lerp = pixelColor * (1.f - t) + paintColor * t;
 
-                image->imgData.data[color_index + 0] = (int)lerp.r;
+                image->imgData.data[color_index + 0] = (int)lerp.b;
                 image->imgData.data[color_index + 1] = (int)lerp.g;
-                image->imgData.data[color_index + 2] = (int)lerp.b;
+                image->imgData.data[color_index + 2] = (int)lerp.r;
             }
         }
     }
 
     //Update texture data
     UpdateTextureData(image);
+}
+
+void DIPlib::SetBrushColor(cv::Scalar color) {
+    brushColor = DIPlib::DenormalizeBGR(
+        DIPlib::RGB2BGR(
+            color
+        )
+    );
 }

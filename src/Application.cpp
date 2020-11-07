@@ -142,6 +142,12 @@ void Application::OnKeyPress(GLFWwindow* window, int key, int scancode, int acti
         Application::GetInstance()->ui.activeModal = "Confirm overwrite##confirm_overwrite_save";
     }
 
+    // Show help window
+    if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS &&
+        glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS){
+        Application::GetInstance()->ui.activeModal = "Help##help_modal";
+    }
+
     // Export as
     if (glfwGetKey(window, GLFW_KEY_S)            == GLFW_PRESS &&
         glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS &&
@@ -239,9 +245,10 @@ void Application::ProcessKeyboardInput(GLFWwindow* window)
 
         if (DIPlib::IsInsideImage(Application::GetInstance()->image, cv::Point(mouseWorldPos.x, mouseWorldPos.y))) {
             
-            DIPlib::SetColorOnImage(Application::GetInstance()->image,
-                                    glm::ivec3(255, 255, 255),
-                                    cv::Point(floor(mouseWorldPos.x), floor(mouseWorldPos.y)));
+            DIPlib::Brush(
+                Application::GetInstance()->image,
+                cv::Point(floor(mouseWorldPos.x), floor(mouseWorldPos.y))
+            );
         }
     }
    

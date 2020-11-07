@@ -114,6 +114,20 @@ void UI::drawSidebar() {
 			ImGui::Separator();
 			ImGui::Dummy(ImVec2(0, 10.0f));
 			ImGui::Checkbox("Brush (experimental)", &paint_mode);
+			if (paint_mode) {
+				ImGui::SetNextItemOpen(true);
+				ImGui::Text("Brush color: ");
+				static float brushColor[] = { brush_color[0],brush_color[1],brush_color[2] };
+				ImGui::ColorPicker3("##color_picker", &brushColor[0]);
+				DIPlib::SetBrushColor(
+					cv::Scalar(
+						brushColor[2],
+						brushColor[1],
+						brushColor[0]
+					)
+				);
+
+			}
 		}
 	}
 	ImGui::End();
@@ -128,8 +142,8 @@ void UI::drawTopMenu() {
 		// File Option
 		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::MenuItem("New Tab")) {
-			}
+			//if (ImGui::MenuItem("New Tab")) {
+			//}
 			if (ImGui::MenuItem("Open Image","ctrl + O")) {
 				activeModal = "Open Image##open_image";
 				History::_redoStack = std::stack<Action*>();
@@ -149,6 +163,13 @@ void UI::drawTopMenu() {
 				}
 			}
 			popDisable(!Application::GetInstance()->imageLoaded);
+			if (ImGui::MenuItem("Help...", "ctrl + H")) {
+				activeModal = "Help##help_modal";
+			}
+
+			if (ImGui::MenuItem("About...")) {
+				activeModal = "About##about_modal";
+			}
 			ImGui::EndMenu();
 		}
 		pushDisable(!Application::GetInstance()->imageLoaded);
@@ -606,6 +627,49 @@ void UI::drawModals() {
 		}
 		ImGui::EndPopup();
 	}
+
+	// About modal
+	ImGui::SetNextWindowSize(ImVec2(350, 150));
+	if (ImGui::BeginPopupModal("About##about_modal")) {
+		ImGui::Text(
+			"Developed by: \n"
+			"		Jose Tirado: @jet29\n"
+			"		Frank Ponte: @fuhranku\n"
+			"Follow us on Github!\n"
+			"Universidad Central de Venezuela - 2020."
+
+		);
+		if (ImGui::Button("OK", ImVec2(80, 30))) {
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+		ImGui::EndPopup();
+	}
+
+	// About modal
+	ImGui::SetNextWindowSize(ImVec2(400, 220));
+	if (ImGui::BeginPopupModal("Help##help_modal")) {
+		ImGui::Text(
+			"Availables Hotkeys: \n"
+			"Please, remember to check our tooltip on the\ntop menu\n"
+			"ctrl + O -> Open new file\n"
+			"ctrl + S -> Overwrite current image\n"
+			"ctrl + shift + s -> Export image\n"
+			"ctrl + Z -> Undo action\n"
+			"ctrl + shift + Z -> Redo action\n"
+			"ctrl + H -> Show Help window\n"
+			"WASD or Space and left mouse click pressed -> Panning\n"
+			"QE or mouse scroll -> Zoom\n"
+
+		);
+		if (ImGui::Button("OK", ImVec2(80, 30))) {
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+		ImGui::EndPopup();
+	}
+
+	
 
 	// Arbitrary rotation modal
 	ImGui::SetNextWindowSize(ImVec2(300, 150));
