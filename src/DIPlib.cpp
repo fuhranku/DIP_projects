@@ -344,13 +344,18 @@ void DIPlib::Rotate(Image* image, float deg) {
     rot.at<double>(0, 2) += bbox.width / 2.0 - image->imgData.cols / 2.0;
     rot.at<double>(1, 2) += bbox.height / 2.0 - image->imgData.rows / 2.0;
 
+    std::cout << "image size before warpAffine: " << image->width <<","<< image->height << std::endl;
+
     cv::warpAffine(image->imgData, image->imgData, rot, bbox.size());
 
     image->width = image->imgData.cols;
     image->height = image->imgData.rows;
 
+    std::cout << "image size after warpAffine: " << image->width << "," << image->height << std::endl;
+
     // Update canvas
-    image->canvas.Update(image->width, image->height);
+    image->computeHalfSize();
+    image->canvas.Update(image->width, image->height,image->arrhalfWidth, image->arrhalfHeight);
 
     // Update GPU Texture
     DIPlib::UpdateTextureData(image);
@@ -431,7 +436,7 @@ void DIPlib::DFT(Image* image) {
     image->channels = 1;
     image->freqComputed = 1;
     // Rebuild Plane
-    image->canvas.Update(image->width, image->height);
+    image->canvas.Update(image->width, image->height, image->arrhalfWidth, image->arrhalfHeight);
     // Update GPU Texture
     DIPlib::UpdateTextureData(image);
                                             
@@ -639,7 +644,7 @@ void DIPlib::FourierToImage(Image *image, std::vector<cv::Mat> channelArray) {
     image->channels = 3;
     image->freqComputed = 0;
     // Rebuild Plane
-    image->canvas.Update(image->width, image->height);
+    image->canvas.Update(image->width, image->height, image->arrhalfWidth, image->arrhalfHeight);
     // Update GPU Texture
     DIPlib::UpdateTextureData(image);
 }

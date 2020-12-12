@@ -28,7 +28,7 @@ public:
 	std::vector<float> vertices;
 	Canvas();
 	void Build(int width, int height, glm::vec2 arrhalfWidth, glm::vec2 arrhalfHeight);
-	void Update(int width, int height);
+	void Update(int width, int height, glm::vec2 arrhalfWidth, glm::vec2 arrhalfHeight);
 	void Delete();
 private:
 

@@ -115,8 +115,8 @@ class Image
 {
 private:
 	void getFileExtension(std::string path);
-	void computeHalfSize();
 public:
+	void computeHalfSize();
 	Image(const char* path);
 	Image(const char* path, int colorSpace);
 	Image();

@@ -48,7 +48,7 @@ void Canvas::Delete() {
     glDeleteBuffers(1, &VBO);
 }
 
-void Canvas::Update(int width, int height) {
+void Canvas::Update(int width, int height, glm::vec2 arrhalfWidth, glm::vec2 arrhalfHeight) {
     Delete();
     Build(width, height, arrhalfWidth, arrhalfHeight);
 }

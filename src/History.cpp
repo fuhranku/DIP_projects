@@ -40,8 +40,10 @@ void History::_undo(Image* image) {
 	DIPlib::UpdateTextureData(image);
 
 	// Revert states if applies (after undoing)
-	if (image->currentFilter == IMG_TRANSFORM_ROTATE)
-		image->canvas.Update(image->width, image->height);
+	if (image->currentFilter == IMG_TRANSFORM_ROTATE) {
+		image->computeHalfSize();
+		image->canvas.Update(image->width, image->height, image->arrhalfWidth, image->arrhalfHeight);
+	}
 }
 
 void History::_redo(Image* image) {
@@ -63,9 +65,10 @@ void History::_redo(Image* image) {
 	// Update GPU texture
 	DIPlib::UpdateTextureData(image);
 
-	// Restore states if applies (after redoing)
-	if (image->currentFilter == IMG_TRANSFORM_ROTATE)
-		image->canvas.Update(image->width, image->height);
+	if (image->currentFilter == IMG_TRANSFORM_ROTATE) {
+		image->computeHalfSize();
+		image->canvas.Update(image->width, image->height, image->arrhalfWidth, image->arrhalfHeight);
+	}
 
 }
 
