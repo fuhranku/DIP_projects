@@ -229,6 +229,9 @@ void UI::drawTopMenu() {
 		pushDisable(!Application::GetInstance()->imageLoaded);
 		if (ImGui::BeginMenu("Image"))
 		{
+			if (ImGui::MenuItem("Image Translation")) {
+				activeModal = "Translate image##trans_image_modal";
+			}
 			if (ImGui::BeginMenu("Image Rotation")) {
 				if (ImGui::MenuItem("180 degree")) {
 					// Save current Action on history
@@ -691,6 +694,39 @@ void UI::drawModals() {
 			History::PushAction(Application::GetInstance()->image);
 			// Perform Action
 			DIPlib::Rotate(Application::GetInstance()->image, deg*label);
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(80, 30))) {
+			ImGui::CloseCurrentPopup();
+			activeModal = "";
+		}
+
+		ImGui::EndPopup();
+	}
+
+	// image translation modal
+	ImGui::SetNextWindowSize(ImVec2(300, 150));
+	if (ImGui::BeginPopupModal("Translate image##trans_image_modal"))
+	{
+		static int dx = 10;
+		ImGui::Text("Dx");
+		ImGui::SameLine();
+		ImGui::DragInt("##trans_dx", &dx, 0.05f, -5000, 5000);
+
+		static int dy = 10;
+		ImGui::Text("Dy");
+		ImGui::SameLine();
+		ImGui::DragInt("##trans_dy", &dy, 0.05f, -5000, 5000);
+
+
+		if (ImGui::Button("OK", ImVec2(80, 30))) {
+			// Save current Action on history
+			Application::GetInstance()->image->currentFilter = IMG_TRANSFORM_TRANSLATE;
+			History::PushAction(Application::GetInstance()->image);
+			// Perform Action
+			DIPlib::Translate(Application::GetInstance()->image, dx,dy);
 			ImGui::CloseCurrentPopup();
 			activeModal = "";
 		}

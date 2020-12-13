@@ -31,6 +31,7 @@ public:
 	static void ColorReduce(int numBits, Image* image);
 	static void EqualizeHist(Image* image);
 	static void Rotate(Image* image, float deg);
+	static void Translate(Image* image, float dx, float dy);
 	static void Flip(Image* image, int mode);
 	static void DFT(Image* image);
 	static void IDFT(Image* image);

@@ -334,6 +334,18 @@ void DIPlib::UpdateTextureData(Image* image) {
     glTexImage2D(GL_TEXTURE_2D, 0, image->internalFormat, image->width, image->height, 0, image->format, GL_UNSIGNED_BYTE, image->imgData.data);
 }
 
+void DIPlib::Translate(Image* image, float dx, float dy) {
+
+    double array[2][3] = { {1, 0, dx }, {0, 1, dy} };
+    cv::Mat mat = cv::Mat(2, 3, CV_64FC1, array);
+    cv::Size2i dsize = cv::Size(image->imgData.cols, image->imgData.rows);
+    // You can try more different parameters
+    cv::warpAffine(image->imgData, image->imgData, mat, dsize, cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar());
+    
+    // Update GPU Texture
+    DIPlib::UpdateTextureData(image);
+}
+
 void DIPlib::Rotate(Image* image, float deg) {
 
     cv::Point2f center((image->imgData.cols - 1) / 2.0, (image->imgData.rows - 1) / 2.0);
@@ -344,14 +356,10 @@ void DIPlib::Rotate(Image* image, float deg) {
     rot.at<double>(0, 2) += bbox.width / 2.0 - image->imgData.cols / 2.0;
     rot.at<double>(1, 2) += bbox.height / 2.0 - image->imgData.rows / 2.0;
 
-    std::cout << "image size before warpAffine: " << image->width <<","<< image->height << std::endl;
-
     cv::warpAffine(image->imgData, image->imgData, rot, bbox.size());
 
     image->width = image->imgData.cols;
     image->height = image->imgData.rows;
-
-    std::cout << "image size after warpAffine: " << image->width << "," << image->height << std::endl;
 
     // Update canvas
     image->computeHalfSize();
@@ -359,7 +367,6 @@ void DIPlib::Rotate(Image* image, float deg) {
 
     // Update GPU Texture
     DIPlib::UpdateTextureData(image);
-
 }
 
 void DIPlib::Flip(Image* image, int mode) {
