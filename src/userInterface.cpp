@@ -374,31 +374,41 @@ void UI::drawModals() {
 	ImGui::SetNextWindowSize(ImVec2(300, 150));
 	if (ImGui::BeginPopupModal("OTSU Threshold##otsu_modal"))
 	{
-		ImGui::Text("Please, set filter values");
+		//ImGui::Text("Please, set filter values");
 
-		ImGui::Text("Thresh");
-		ImGui::DragFloat("Thresh", &thresh, 0.05f, 0.0f, 255.0f, "%.2f");
+		//ImGui::Text("Thresh");
+		//ImGui::DragFloat("Thresh", &thresh, 0.05f, 0.0f, 255.0f, "%.2f");
 
-		ImGui::Text("Max Value");
-		ImGui::DragFloat("Max Value", &maxValue, 0.05f, 0.0f, 255.0f, "%.2f");
+		//ImGui::Text("Max Value");
+		//ImGui::DragFloat("Max Value", &maxValue, 0.05f, 0.0f, 255.0f, "%.2f");
 
 
-		if (ImGui::Button("Apply", ImVec2(80, 30))) {
-			// Save current Action on history
-			Application::GetInstance()->image->currentFilter = IMG_THRESHOLD_OTSU;
-			History::PushAction(Application::GetInstance()->image);
-			// Perform Action
-			DIPlib::OTSU(thresh, maxValue, Application::GetInstance()->image);
-			ImGui::CloseCurrentPopup();
-			activeModal = "";
-		}
+		//if (ImGui::Button("Apply", ImVec2(80, 30))) {
+		//	// Save current Action on history
+		//	Application::GetInstance()->image->currentFilter = IMG_THRESHOLD_OTSU;
+		//	History::PushAction(Application::GetInstance()->image);
+		//	// Perform Action
+		//	DIPlib::OTSU(thresh, maxValue, Application::GetInstance()->image);
+		//	ImGui::CloseCurrentPopup();
+		//	activeModal = "";
+		//}
 
-		ImGui::SameLine();
-		if (ImGui::Button("Cancel", ImVec2(80, 30)))
-		{
-			ImGui::CloseCurrentPopup();
-			activeModal = "";
-		}
+		//ImGui::SameLine();
+		//if (ImGui::Button("Cancel", ImVec2(80, 30)))
+		//{
+		//	ImGui::CloseCurrentPopup();
+		//	activeModal = "";
+		//}
+		//ImGui::EndPopup();
+
+		// Save current Action on history
+		Application::GetInstance()->image->currentFilter = IMG_THRESHOLD_OTSU;
+		History::PushAction(Application::GetInstance()->image);
+		// Perform Action
+		DIPlib::OTSU(125, 255, Application::GetInstance()->image);
+		ImGui::CloseCurrentPopup();
+		activeModal = "";
+
 		ImGui::EndPopup();
 	}
 
@@ -406,30 +416,41 @@ void UI::drawModals() {
 	ImGui::SetNextWindowSize(ImVec2(300, 150));
 	if (ImGui::BeginPopupModal("Gaussian Adaptive Threshold##adaptive_modal"))
 	{
-		ImGui::Text("Please, set filter values");
+		//ImGui::Text("Please, set filter values");
 
-		ImGui::Text("Thresh");
-		ImGui::DragFloat("Thresh", &thresh, 0.05f, 0.0f, 255.0f, "%.2f");
+		//ImGui::Text("Thresh");
+		//ImGui::DragFloat("Thresh", &thresh, 0.05f, 0.0f, 255.0f, "%.2f");
 
-		ImGui::Text("Max Value");
-		ImGui::DragFloat("Max Value", &maxValue, 0.05f, 0.0f, 255.0f, "%.2f");
+		//ImGui::Text("Max Value");
+		//ImGui::DragFloat("Max Value", &maxValue, 0.05f, 0.0f, 255.0f, "%.2f");
 
-		if (ImGui::Button("Apply", ImVec2(80, 30))) {
-			// Save current Action on history
-			Application::GetInstance()->image->currentFilter = IMG_THRESHOLD_GAUSSIAN;
-			History::PushAction(Application::GetInstance()->image);
-			// Perform Action
-			DIPlib::GaussianAdaptiveThreshold(thresh, maxValue, Application::GetInstance()->image);
-			ImGui::CloseCurrentPopup();
-			activeModal = "";
-		}
+		//if (ImGui::Button("Apply", ImVec2(80, 30))) {
+		//	// Save current Action on history
+		//	Application::GetInstance()->image->currentFilter = IMG_THRESHOLD_GAUSSIAN;
+		//	History::PushAction(Application::GetInstance()->image);
+		//	// Perform Action
+		//	DIPlib::GaussianAdaptiveThreshold(thresh, maxValue, Application::GetInstance()->image);
+		//	ImGui::CloseCurrentPopup();
+		//	activeModal = "";
+		//}
 
-		ImGui::SameLine();
-		if (ImGui::Button("Cancel", ImVec2(80, 30)))
-		{
-			ImGui::CloseCurrentPopup();
-			activeModal = "";
-		}
+		//ImGui::SameLine();
+		//if (ImGui::Button("Cancel", ImVec2(80, 30)))
+		//{
+		//	ImGui::CloseCurrentPopup();
+		//	activeModal = "";
+		//}
+		//ImGui::EndPopup();
+
+
+		// Save current Action on history
+		Application::GetInstance()->image->currentFilter = IMG_THRESHOLD_GAUSSIAN;
+		History::PushAction(Application::GetInstance()->image);
+		// Perform Action
+		DIPlib::GaussianAdaptiveThreshold(127, 255, Application::GetInstance()->image);
+		ImGui::CloseCurrentPopup();
+		activeModal = "";
+
 		ImGui::EndPopup();
 	}
 
