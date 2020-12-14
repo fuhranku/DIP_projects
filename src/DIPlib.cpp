@@ -677,6 +677,9 @@ void DIPlib::FloodFill(Image* image, int range_type, int nhbrhd_type, cv::Point 
     int range[] = { 4, 8 };
     int nhbrhd[] = { 0 , cv::FLOODFILL_FIXED_RANGE };
 
+    std::cout << "testing" << std::endl;
+    std::cout << range_type << std::endl;
+
     // Compute flood fill
     cv::floodFill(
         image->imgData,

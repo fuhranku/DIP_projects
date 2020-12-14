@@ -89,8 +89,8 @@ void Application::OnMouseButton(GLFWwindow* window, int button, int action, int 
 
             DIPlib::FloodFill(
                 Application::GetInstance()->image,
-                Application::GetInstance()->ui.floodfill_range_selected,
                 Application::GetInstance()->ui.nhbrhd_elements_count,
+                Application::GetInstance()->ui.floodfill_range_selected,
                 cv::Point(
                     mouseWP.x,
                     mouseWP.y
